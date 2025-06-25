@@ -1,8 +1,8 @@
-function App() {
+// src/App.tsx
+import { AppRoutes } from "./routes";
 
-  return (
-    <h1>React</h1>
-  )
+function App() {
+  return <AppRoutes />;
 }
 
-export default App
+export default App;

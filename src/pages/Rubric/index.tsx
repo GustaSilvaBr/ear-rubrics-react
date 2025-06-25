@@ -1,5 +1,8 @@
-export function Rubric(){
-    <div>
-        Rubric
-    </div>
+export function Rubric() {
+    return (
+        <div>
+            Rubric
+        </div>
+    )
+
 }
