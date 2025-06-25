@@ -19,7 +19,7 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <PrivateRoute>
-        <Home />
+       <Rubric/>
       </PrivateRoute>
     ),
   },
@@ -31,7 +31,7 @@ const router = createBrowserRouter([
     path: "/rubric",
     element: (
       <PrivateRoute>
-        <Rubric />
+         <Home />
       </PrivateRoute>
     ),
   },
