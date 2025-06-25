@@ -1,15 +1,39 @@
-interface IPossibleScore{
-    score: Number,
-    text: String
-}
-
 export interface IRubricLine {
     categoryName: String,
-    possibleScores: IPossibleScore[],//Max of 4 = 25, 20, 15, 10
+    possibleScores: [
+        {
+            score: 25,
+            text: String,
+        },
+        {
+            score: 20,
+            text: String,
+        },
+        {
+            score: 15,
+            text: String,
+        },
+        {
+            score: 10,
+            text: String,
+        }
+    ]
+}
+
+interface IStudentRubricGrade{
+    studentDocId: String, //Ref,
+    rubricGradesLocation : {
+        categoryIndex: number,
+        gradingIndex: number,
+    }[]
 }
 
 export interface IRubric{
+    teacherDocId: String,//Ref
+    studentRubricGrade: IStudentRubricGrade[]
     rubricLines: IRubricLine[],
-    author: String,
-    rubricDocId: String,
+    header:{
+        title: String,
+        gradeLevel:string,
+    }
 }
