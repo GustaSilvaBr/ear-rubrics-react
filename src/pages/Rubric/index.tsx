@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
 import { RubricTable } from "./RubricTable";
 import styles from "./Rubric.module.scss";
+const GRADE_LEVEL_OPTIONS = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
 
 export function Rubric() {
   const [searchParams] = useSearchParams();
@@ -23,8 +24,8 @@ export function Rubric() {
         teacherDocId: "",
         studentRubricGrade: [],
         header: {
-          title: "Create a New Rubric",
-          gradeLevel: "Select Grade Level",
+          title: "Untitled Rubric",
+          gradeLevels: [],
         },
         rubricLines: [
           {
@@ -43,6 +44,27 @@ export function Rubric() {
     }
   }, [searchParams]);
 
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!rubric) return;
+    setRubric({
+      ...rubric,
+      header: { ...rubric.header, title: e.target.value },
+    });
+  };
+
+  const handleGradeLevelChange = (grade: string) => {
+    if (!rubric) return;
+    const currentGrades = rubric.header.gradeLevels;
+    const newGrades = currentGrades.includes(grade)
+      ? currentGrades.filter((g) => g !== grade)
+      : [...currentGrades, grade];
+
+    setRubric({
+      ...rubric,
+      header: { ...rubric.header, gradeLevels: newGrades },
+    });
+  };
+
   const handleAddCategory = () => {
     if (!rubric) return;
     const newCategory: IRubricLine = {
@@ -58,11 +80,8 @@ export function Rubric() {
     setRubric({ ...rubric, rubricLines: [...rubric.rubricLines, newCategory] });
   };
 
-  // --- DELETE LOGIC UPDATED TO USE ID ---
   const handleRemoveCategory = (lineId: String) => {
     if (!rubric) return;
-
-    // Filter by lineId instead of index
     const updatedLines = rubric.rubricLines.filter(
       (line) => line.lineId !== lineId
     );
@@ -73,18 +92,52 @@ export function Rubric() {
     });
   };
 
+  const handleSaveRubric = () => {
+    if (!rubric) return;
+    const savedRubricsRaw = localStorage.getItem("rubrics");
+    const savedRubrics = savedRubricsRaw ? JSON.parse(savedRubricsRaw) : [];
+    const updatedRubrics = [...savedRubrics, rubric];
+    localStorage.setItem("rubrics", JSON.stringify(updatedRubrics));
+    alert("Rubric saved to localStorage!");
+    console.log("Updated list of rubrics in localStorage:", updatedRubrics);
+  };
+
   if (!rubric) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className={styles.rubricContainer}>
+      {/* --- UPDATED ---: The header structure was refactored significantly. */}
       <header className={styles.header}>
-        <h1 className={styles.title}>{String(rubric.header.title)}</h1>
-        <span className={styles.separator}>|</span>
-        <p className={styles.teacherInfo}>
-          [Teacher Name] - {String(rubric.header.gradeLevel)}
-        </p>
+        <div className={styles.headerContent}>
+          {/* Title is now an input field */}
+          <input
+            type="text"
+            value={String(rubric.header.title)}
+            onChange={handleTitleChange}
+            className={styles.titleInput}
+            placeholder="Untitled Rubric"
+          />
+          {/* Grade level selector was added */}
+          <div className={styles.gradeSelector}>
+            <span className={styles.gradeLabel}>Grade Levels:</span>
+            {GRADE_LEVEL_OPTIONS.map((grade) => (
+              <label key={grade} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={rubric.header.gradeLevels.includes(grade)}
+                  onChange={() => handleGradeLevelChange(grade)}
+                />
+                {grade}
+              </label>
+            ))}
+          </div>
+        </div>
+        {/* Save button was added to the header */}
+        <button onClick={handleSaveRubric} className={styles.saveButton}>
+          Save Rubric
+        </button>
       </header>
       <hr className={styles.divider} />
 

@@ -7,75 +7,72 @@
 
 .header {
   display: flex;
-  justify-content: start;
+  justify-content: space-between; // To space out content and save button
   align-items: center;
-  margin-bottom: $spacing-md;
   gap: $spacing-md;
+  margin-bottom: $spacing-sm;
 }
 
-.title {
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.titleInput {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
   color: $primary-color;
-  flex-shrink: 0;
   font-size: $font-size-xl;
-  margin: 0;
-}
+  font-weight: $font-weight-bold;
+  font-family: $font-family-sans;
+  padding: 0;
 
-.teacherInfo {
-  text-align: right;
-  flex-shrink: 0;
-  p {
-    margin: 0;
-    font-size: $font-size-base;
-    color: darken($text-color, 10%);
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid $primary-color;
   }
 }
 
-.rubricTable {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: $spacing-md;
-  box-shadow: $box-shadow;
-  border-radius: $border-radius;
-  overflow: hidden;
+.gradeSelector {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 }
 
-/* --- Updated Style Below --- */
-.tableHeader {
-  // Removed background color for a cleaner look
-  background-color: #fff;
-  // Using a darker, solid border for clear, professional separation
-  border-bottom: 2px solid $text-color;
-  padding: $spacing-sm;
-  text-align: left;
-  // Using base font size and uppercase transform for a professional feel
+.gradeLabel {
   font-size: $font-size-base;
-  font-weight: $font-weight-bold;
-  color: $text-color;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: darken($text-color, 10%);
 }
 
-.tableCell {
-  border: 1px solid $border-color;
-  padding: $spacing-xs $spacing-sm;
-  vertical-align: top;
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs / 2;
   font-size: $font-size-base;
+  cursor: pointer;
 }
 
-.addButton {
-  width: 100%;
-  padding: $spacing-xs $spacing-sm;
-  margin-top: $spacing-md;
+.divider {
+  border: none;
+  border-top: 1px solid $border-color;
+  margin-top: 0;
+}
+
+.saveButton {
+  padding: $spacing-sm $spacing-lg;
   font-size: $font-size-large;
   font-weight: $font-weight-bold;
   color: #fff;
-  background-color: $primary-color;
+  background-color: $success-color;
   border: none;
   border-radius: $border-radius;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  white-space: nowrap; // Prevent button text from wrapping
 
   &:hover {
-    background-color: darken($primary-color, 10%);
+    background-color: darken($success-color, 10%);
   }
 }

@@ -35,6 +35,6 @@ export interface IRubric{
     rubricLines: IRubricLine[],
     header:{
         title: String,
-        gradeLevel:string,
+        gradeLevels:String[],
     }
 }
