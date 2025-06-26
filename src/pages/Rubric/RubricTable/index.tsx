@@ -1,11 +1,10 @@
-// src/components/RubricTable/index.tsx
+// src/pages/Rubric/RubricTable/index.tsx
 import type { IRubricLine } from "../../../interfaces/IRubric";
 import styles from "./RubricTable.module.scss";
 
 interface RubricTableProps {
   rubricLines: IRubricLine[];
   onAddCategory: () => void;
-  // We will add more props later for editing and deleting
 }
 
 export function RubricTable({
@@ -17,19 +16,19 @@ export function RubricTable({
       <table className={styles.rubricTable}>
         <thead>
           <tr>
-            <th className={styles.tableHeader}>Category</th>
-            <th className={styles.tableHeader}>Excellent (25)</th>
-            <th className={styles.tableHeader}>Good (20)</th>
-            <th className={styles.tableHeader}>Average (15)</th>
-            <th className={styles.tableHeader}>Needs Improvement (10)</th>
-            <th className={styles.tableHeader}></th> {/* Header for the delete button */}
+            <th className={styles.categoryHeader}>Category</th>
+            <th className={styles.scoreHeader}>Excellent (25)</th>
+            <th className={styles.scoreHeader}>Good (20)</th>
+            <th className={styles.scoreHeader}>Average (15)</th>
+            <th className={styles.scoreHeader}>Needs Improvement (10)</th>
+            <th className={styles.actionHeader}></th>
           </tr>
         </thead>
         <tbody>
           {rubricLines.map((line, lineIndex) => (
             <tr key={lineIndex}>
-              {/* Category Name Cell */}
-              <td className={styles.tableCell}>
+              {/* Category cell now has a specific class */}
+              <td className={styles.categoryCell}>
                 <textarea
                   className={styles.cellInput}
                   defaultValue={String(line.categoryName)}
@@ -47,7 +46,7 @@ export function RubricTable({
                 </td>
               ))}
               {/* Delete Action Cell */}
-              <td className={styles.tableCell}>
+              <td className={styles.actionCell}>
                 <button className={styles.deleteButton} disabled>
                   -
                 </button>
