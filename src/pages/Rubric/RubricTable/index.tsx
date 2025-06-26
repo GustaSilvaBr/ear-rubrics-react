@@ -5,11 +5,13 @@ import styles from "./RubricTable.module.scss";
 interface RubricTableProps {
   rubricLines: IRubricLine[];
   onAddCategory: () => void;
+  onRemoveCategory: (lineId: String) => void; // Prop now expects a String (the ID)
 }
 
 export function RubricTable({
   rubricLines,
   onAddCategory,
+  onRemoveCategory,
 }: RubricTableProps) {
   return (
     <>
@@ -25,9 +27,9 @@ export function RubricTable({
           </tr>
         </thead>
         <tbody>
-          {rubricLines.map((line, lineIndex) => (
-            <tr key={lineIndex}>
-              {/* Category cell now has a specific class */}
+          {rubricLines.map((line) => (
+            // --- KEY PROP UPDATED TO USE THE UNIQUE ID ---
+            <tr key={String(line.lineId)}>
               <td className={styles.categoryCell}>
                 <textarea
                   className={styles.cellInput}
@@ -35,7 +37,6 @@ export function RubricTable({
                   placeholder="Category Name..."
                 />
               </td>
-              {/* Score Description Cells */}
               {line.possibleScores.map((score, scoreIndex) => (
                 <td key={scoreIndex} className={styles.tableCell}>
                   <textarea
@@ -45,9 +46,12 @@ export function RubricTable({
                   />
                 </td>
               ))}
-              {/* Delete Action Cell */}
               <td className={styles.actionCell}>
-                <button className={styles.deleteButton} disabled>
+                {/* --- ONCLICK NOW PASSES THE UNIQUE ID --- */}
+                <button
+                  onClick={() => onRemoveCategory(line.lineId)}
+                  className={styles.deleteButton}
+                >
                   -
                 </button>
               </td>

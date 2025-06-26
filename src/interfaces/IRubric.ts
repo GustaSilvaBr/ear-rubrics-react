@@ -1,4 +1,5 @@
 export interface IRubricLine {
+    lineId: String,
     categoryName: String,
     possibleScores: [
         {

@@ -90,13 +90,19 @@ textarea.cellInput {
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   cursor: pointer;
-  transition: background-color 0.2s ease; // Added transition
+  transition: background-color 0.2s ease;
 
-  // New hover state for visual feedback
   &:hover {
     background-color: lighten($error-color, 40%);
   }
+
+  /* This :disabled state is no longer used but is good to keep for other potential scenarios */
+  &:disabled {
+    color: $border-color;
+    cursor: not-allowed;
+  }
 }
+
 .addButton {
   width: 100%;
   padding: $spacing-xs $spacing-sm;
