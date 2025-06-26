@@ -1,0 +1,54 @@
+// src/components/Layout/Layout.module.scss
+@import "../../styles/variables";
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $background-color;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm $spacing-lg;
+  background-color: #ffffff;
+  border-bottom: 1px solid $border-color;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  text-decoration: none;
+  color: $primary-color;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-xl;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.signOutButton {
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-base;
+  color: $primary-color;
+  background-color: transparent;
+  border: 1px solid $primary-color;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background-color: $primary-color;
+    color: #ffffff;
+  }
+}
+
+.content {
+  flex-grow: 1;
+  padding: $spacing-md;
+}

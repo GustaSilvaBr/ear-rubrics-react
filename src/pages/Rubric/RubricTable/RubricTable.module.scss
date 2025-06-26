@@ -1,0 +1,83 @@
+// src/components/RubricTable/RubricTable.module.scss
+@import "../../../styles/variables";
+
+.rubricTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: $spacing-md;
+  box-shadow: $box-shadow;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+.tableHeader {
+  background-color: #fff;
+  border-bottom: 2px solid $text-color;
+  padding: $spacing-sm;
+  text-align: left;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $text-color;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tableCell {
+  border: 1px solid $border-color;
+  padding: 0; // Remove padding to allow input to fill the cell
+  vertical-align: top;
+}
+
+.cellInput {
+  width: 100%;
+  height: 120px; // A fixed height for consistency
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  background-color: transparent;
+  font-family: $font-family-sans;
+  font-size: $font-size-base;
+  color: $text-color;
+  resize: none; // Disables manual resizing by the user
+
+  &:focus {
+    outline: 2px solid $primary-color;
+    background-color: lighten($secondary-color, 2%);
+  }
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: $error-color;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+  
+  &:disabled{
+    color: $border-color;
+    cursor: not-allowed;
+  }
+}
+
+.addButton {
+  width: 100%;
+  padding: $spacing-xs $spacing-sm;
+  margin-top: $spacing-md;
+  font-size: $font-size-large;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  background-color: $primary-color;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}

@@ -1,0 +1,33 @@
+// src/styles/_variables.scss
+
+// 1. Colors: Simple, high-contrast palette for readability.
+$primary-color: #005a9c; // A calm, professional blue for main actions
+$secondary-color: #f0f8ff; // A light, airy blue for backgrounds
+$text-color: #333333; // Dark grey for text, easier on the eyes than pure black
+$background-color: #ffffff;
+$border-color: #dddddd;
+$success-color: #2e7d32;
+$error-color: #c62828;
+
+// 2. Typography: Adjusted for a more compact view
+$font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+  Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+$font-size-base: 0.9rem; // ~14.4px
+$font-size-large: 1.1rem; // ~17.6px
+$font-size-xl: 1.25rem; // ~20px
+$font-size-title: 1.75rem; // ~28px
+
+$font-weight-normal: 400;
+$font-weight-bold: 700;
+
+// 3. Spacing: Reduced units for a tighter layout.
+$spacing-unit: 6px; // Base unit reduced from 8px
+$spacing-xs: $spacing-unit; // 6px
+$spacing-sm: $spacing-unit * 2; // 12px
+$spacing-md: $spacing-unit * 3; // 18px
+$spacing-lg: $spacing-unit * 4; // 24px
+
+// 4. Borders & Shadows: Subtle effects for visual hierarchy.
+$border-radius: 4px;
+$box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

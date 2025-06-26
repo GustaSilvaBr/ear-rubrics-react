@@ -1,0 +1,89 @@
+// src/pages/Rubric/Rubric.module.scss
+@import "../../styles/variables";
+
+.rubricContainer {
+  // Page-specific container
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  // Use gap for spacing instead of justify-content
+  gap: $spacing-sm;
+  // Reduced bottom margin for a tighter feel
+  margin-bottom: $spacing-sm;
+}
+
+.title {
+  color: $primary-color;
+  font-size: $font-size-xl;
+  // Remove default margins from h1 to align correctly in flexbox
+  margin: 0;
+}
+
+.separator {
+  color: $border-color;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-normal;
+}
+
+.teacherInfo {
+  // Remove default margins from p to align correctly
+  margin: 0;
+  font-size: $font-size-base;
+  color: darken($text-color, 10%);
+}
+
+// Style for the horizontal rule
+.divider {
+  border: none;
+  border-top: 1px solid $border-color;
+  margin-top: 0;
+}
+
+
+.rubricTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: $spacing-md;
+  box-shadow: $box-shadow;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+.tableHeader {
+  background-color: #fff;
+  border-bottom: 2px solid $text-color;
+  padding: $spacing-sm;
+  text-align: left;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $text-color;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tableCell {
+  border: 1px solid $border-color;
+  padding: $spacing-xs $spacing-sm;
+  vertical-align: top;
+  font-size: $font-size-base;
+}
+
+.addButton {
+  width: 100%;
+  padding: $spacing-xs $spacing-sm;
+  margin-top: $spacing-md;
+  font-size: $font-size-large;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  background-color: $primary-color;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}

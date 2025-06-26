@@ -9,6 +9,7 @@ import { Login } from "./pages/Login";
 import { Rubric } from "./pages/Rubric";
 import { auth } from "./auth";
 import type { JSX } from "react";
+import { Layout } from "./components/Layout"; // Import the new Layout
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   return auth.isAuthenticated ? children : <Navigate to="/login" />;
@@ -16,24 +17,26 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: (
-      <PrivateRoute>
-       <Rubric/>
-      </PrivateRoute>
-    ),
-  },
-  {
     path: "/login",
     element: <Login />,
   },
   {
-    path: "/rubric",
+    // All protected routes are now children of the Layout component
     element: (
       <PrivateRoute>
-         <Home />
+        <Layout />
       </PrivateRoute>
     ),
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/rubric",
+        element: <Rubric />,
+      },
+    ],
   },
 ]);
 
