@@ -1,22 +1,28 @@
 // src/pages/Rubric/RubricTable/index.tsx
-import type { IRubricLine } from "../../../interfaces/IRubric";
+import type { IRubricLine, IStudentRubricGrade } from "../../../interfaces/IRubric";
 import styles from "./RubricTable.module.scss";
 
 interface RubricTableProps {
   rubricLines: IRubricLine[];
+  // Receive the grades for the selected student
+  selectedStudentGrades?: IStudentRubricGrade['rubricGradesLocation'];
   onAddCategory: () => void;
   onRemoveCategory: (lineId: String) => void;
+  // Receive the grading handler
+  onGradeSelect: (categoryIndex: number, gradingIndex: number) => void;
 }
 
 export function RubricTable({
   rubricLines,
+  selectedStudentGrades = [], // Default to an empty array
   onAddCategory,
   onRemoveCategory,
+  onGradeSelect,
 }: RubricTableProps) {
   return (
-    // --- WRAPPER DIV ADDED FOR SCROLLING ---
     <div className={styles.tableContainer}>
       <table className={styles.rubricTable}>
+        {/* ... (thead is unchanged) ... */}
         <thead>
           <tr>
             <th className={styles.categoryHeader}>Category</th>
@@ -28,7 +34,7 @@ export function RubricTable({
           </tr>
         </thead>
         <tbody>
-          {rubricLines.map((line) => (
+          {rubricLines.map((line, categoryIndex) => (
             <tr key={String(line.lineId)}>
               <td className={styles.categoryCell}>
                 <textarea
@@ -37,15 +43,28 @@ export function RubricTable({
                   placeholder="Category Name..."
                 />
               </td>
-              {line.possibleScores.map((score, scoreIndex) => (
-                <td key={scoreIndex} className={styles.tableCell}>
-                  <textarea
-                    className={styles.cellInput}
-                    defaultValue={String(score.text)}
-                    placeholder="Description..."
-                  />
-                </td>
-              ))}
+              {line.possibleScores.map((score, gradingIndex) => {
+                // Check if this cell is the selected grade for this category
+                const isSelected = selectedStudentGrades.some(
+                  g => g.categoryIndex === categoryIndex && g.gradingIndex === gradingIndex
+                );
+                return (
+                  <td 
+                    key={gradingIndex} 
+                    // Add the 'selected' class if it is
+                    className={`${styles.tableCell} ${isSelected ? styles.selected : ''}`}
+                    // Add the onClick handler
+                    onClick={() => onGradeSelect(categoryIndex, gradingIndex)}
+                  >
+                    <textarea
+                      className={styles.cellInput}
+                      defaultValue={String(score.text)}
+                      placeholder="Description..."
+                      readOnly // Make the textareas read-only during grading
+                    />
+                  </td>
+                )
+              })}
               <td className={styles.actionCell}>
                 <button
                   onClick={() => onRemoveCategory(line.lineId)}
@@ -57,6 +76,7 @@ export function RubricTable({
             </tr>
           ))}
         </tbody>
+        {/* ... (tfoot is unchanged) ... */}
         <tfoot>
           <tr>
             <td colSpan={6} className={styles.addCategoryRow}>

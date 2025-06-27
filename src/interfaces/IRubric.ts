@@ -21,7 +21,7 @@ export interface IRubricLine {
     ]
 }
 
-interface IStudentRubricGrade{
+export interface IStudentRubricGrade{
     studentDocId: String, //Ref,
     rubricGradesLocation : {
         categoryIndex: number,
@@ -30,8 +30,8 @@ interface IStudentRubricGrade{
 }
 
 export interface IRubric{
-    teacherDocId: String,//Ref
-    studentRubricGrade: IStudentRubricGrade[]
+    teacherDocId: String,
+    studentRubricGrade: IStudentRubricGrade[],
     rubricLines: IRubricLine[],
     header:{
         title: String,

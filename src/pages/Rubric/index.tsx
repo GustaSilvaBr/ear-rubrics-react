@@ -1,20 +1,20 @@
 // src/pages/Rubric/index.tsx
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
+import type { IRubric, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
+import type { IStudent } from "../../interfaces/IStudent";
 import { RubricTable } from "./RubricTable";
 import { StudentList } from "./StudentList";
-import { DropdownMenu } from "../../components/DropdownMenu"; // Import Dropdown
+import { DropdownMenu } from "../../components/DropdownMenu";
 import styles from "./Rubric.module.scss";
 
-// --- NEW ICONS ---
+// --- ICONS (unchanged) ---
 const ShareIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
     </svg>
 );
-
 const OptionsIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="1"></circle>
@@ -27,12 +27,17 @@ const OptionsIcon = () => (
 export function Rubric() {
   const [searchParams] = useSearchParams();
   const [rubric, setRubric] = useState<IRubric | null>(null);
+  const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
+  // 1. Add state to track the currently selected student
+  const [selectedStudent, setSelectedStudent] = useState<IStudent | null>(null);
+
 
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };
 
   useEffect(() => {
+    // ... (useEffect content is unchanged)
     const rubricId = searchParams.get("id");
     if (rubricId) {
       // Logic for fetching an existing rubric would go here
@@ -81,8 +86,66 @@ export function Rubric() {
     setRubric({ ...rubric, rubricLines: updatedLines });
   };
   
-  // Placeholder actions for the new buttons
-  const handleShare = () => {
+  const handleAssignStudent = (student: IStudent) => {
+    if (!rubric) return;
+    setAssignedStudents([...assignedStudents, student]);
+    const newStudentGrade: IStudentRubricGrade = {
+      studentDocId: student.studentDocId,
+      rubricGradesLocation: [],
+    };
+    setRubric({
+      ...rubric,
+      studentRubricGrade: [...rubric.studentRubricGrade, newStudentGrade],
+    });
+  };
+
+  const handleRemoveStudent = (studentDocId: String) => {
+    if (!rubric) return;
+    // If the student being removed is the currently selected one, deselect them.
+    if (selectedStudent?.studentDocId === studentDocId) {
+      setSelectedStudent(null);
+    }
+    setAssignedStudents(
+      assignedStudents.filter((s) => s.studentDocId !== studentDocId)
+    );
+    const updatedGrades = rubric.studentRubricGrade.filter(
+      (grade) => grade.studentDocId !== studentDocId
+    );
+    setRubric({ ...rubric, studentRubricGrade: updatedGrades });
+  };
+
+  // 2. Add the handler for grading a cell
+  const handleGradeSelect = (categoryIndex: number, gradingIndex: number) => {
+    // Rule 3: The teacher can only give grades after selecting a student
+    if (!selectedStudent || !rubric) {
+      alert("Please select a student before assigning grades.");
+      return;
+    }
+
+    const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
+      // Find the currently selected student's grade object
+      if (studentGrade.studentDocId === selectedStudent.studentDocId) {
+        // Rule 2: Remove any existing grade for this category
+        const filteredGrades = studentGrade.rubricGradesLocation.filter(
+          (grade) => grade.categoryIndex !== categoryIndex
+        );
+        
+        // Add the new grade
+        return {
+          ...studentGrade,
+          rubricGradesLocation: [
+            ...filteredGrades,
+            { categoryIndex, gradingIndex },
+          ],
+        };
+      }
+      return studentGrade;
+    });
+    setRubric({ ...rubric, studentRubricGrade: newGrades });
+  };
+
+  // ... (handleShare, handleEdit, handleDelete are unchanged)
+    const handleShare = () => {
     alert("Share action!");
   };
 
@@ -102,9 +165,15 @@ export function Rubric() {
     return <div>Loading...</div>;
   }
 
+  // Find the grades for the currently selected student to pass to the table
+  const selectedStudentGrades = rubric.studentRubricGrade.find(
+    (g) => g.studentDocId === selectedStudent?.studentDocId
+  )?.rubricGradesLocation;
+
   return (
     <div className={styles.rubricPage}>
       <div className={styles.rubricContent}>
+        {/* ... (header is unchanged) ... */}
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <input
@@ -136,13 +205,23 @@ export function Rubric() {
 
         <RubricTable
           rubricLines={rubric.rubricLines}
+          selectedStudentGrades={selectedStudentGrades}
           onAddCategory={handleAddCategory}
           onRemoveCategory={handleRemoveCategory}
+          // 3. Pass the new handler to the table
+          onGradeSelect={handleGradeSelect}
         />
       </div>
       
       <div className={styles.studentListSidebar}>
-        <StudentList />
+        <StudentList 
+          assignedStudents={assignedStudents}
+          selectedStudent={selectedStudent}
+          onAssignStudent={handleAssignStudent}
+          onRemoveStudent={handleRemoveStudent}
+          // 4. Pass the student selection handler
+          onSelectStudent={setSelectedStudent}
+        />
       </div>
     </div>
   );

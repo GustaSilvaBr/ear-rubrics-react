@@ -6,7 +6,7 @@
 // 1. This new container will handle the scrolling
 .tableContainer {
   // Set a height for the scrollable area. This is calculated to show about 4 rows.
-  
+
   max-height: 420px;
   // This is the key property that creates the vertical scrollbar if content overflows.
   overflow-y: auto;
@@ -64,6 +64,7 @@
     background-color: darken($primary-color, 10%);
   }
 }
+
 // --- NEW STYLES END HERE ---
 
 
@@ -96,6 +97,17 @@ td.tableCell {
   padding: 0;
   vertical-align: top;
   height: 80px;
+  // Add cursor pointer for grading
+  cursor: pointer;
+
+  // Add a selected state
+  &.selected {
+    background-color: lighten($success-color, 60%);
+
+    textarea {
+      background-color: transparent; // Ensure textarea doesn't hide the background
+    }
+  }
 }
 
 .categoryCell {

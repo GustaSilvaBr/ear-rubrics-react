@@ -1,50 +1,68 @@
 // src/pages/Rubric/StudentList/index.tsx
-import { useState } from "react";
 import type { IStudent } from "../../../interfaces/IStudent";
 import { mockStudents } from "../../../data/mockStudents";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
-export function StudentList() {
-  const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
+interface StudentListProps {
+  assignedStudents: IStudent[];
+  // Add selectedStudent and a handler to set it
+  selectedStudent: IStudent | null;
+  onAssignStudent: (student: IStudent) => void;
+  onRemoveStudent: (studentId: String) => void;
+  onSelectStudent: (student: IStudent) => void;
+}
+
+export function StudentList({
+  assignedStudents,
+  selectedStudent,
+  onAssignStudent,
+  onRemoveStudent,
+  onSelectStudent,
+}: StudentListProps) {
 
   const handleSelectStudent = (student: IStudent) => {
-    // Prevent adding the same student twice
     if (!assignedStudents.find((s) => s.studentDocId === student.studentDocId)) {
-      setAssignedStudents([...assignedStudents, student]);
+      onAssignStudent(student);
     }
-  };
-
-  const handleRemoveStudent = (studentId: String) => {
-    setAssignedStudents(
-      assignedStudents.filter((s) => s.studentDocId !== studentId)
-    );
   };
 
   return (
     <aside className={styles.studentListContainer}>
       <h2 className={styles.title}>Assign Students</h2>
       
-      {/* Autocomplete Search Component */}
       <StudentAutocomplete
         allStudents={mockStudents}
         onStudentSelect={handleSelectStudent}
       />
 
-      {/* List of Assigned Students */}
       <div className={styles.assignedList}>
         {assignedStudents.length > 0 ? (
-          assignedStudents.map((student) => (
-            <div key={String(student.studentDocId)} className={styles.studentItem}>
-              <span>{student.name}</span>
-              <button
-                onClick={() => handleRemoveStudent(student.studentDocId)}
-                className={styles.removeButton}
+          assignedStudents.map((student) => {
+            // Check if the current student is the selected one
+            const isSelected = selectedStudent?.studentDocId === student.studentDocId;
+            return (
+              <div 
+                key={String(student.studentDocId)} 
+                // Add the 'selected' class conditionally
+                className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
+                // Add onClick to select the student
+                onClick={() => onSelectStudent(student)}
               >
-                &times;
-              </button>
-            </div>
-          ))
+                <span>{student.name}</span>
+                <button
+                  // Stop click propagation to prevent selecting when removing
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    onRemoveStudent(student.studentDocId);
+                  }}
+                  className={styles.removeButton}
+                >
+                  &times;
+                </button>
+              </div>
+            )
+          })
         ) : (
           <p className={styles.noStudentsMessage}>No students assigned yet.</p>
         )}
