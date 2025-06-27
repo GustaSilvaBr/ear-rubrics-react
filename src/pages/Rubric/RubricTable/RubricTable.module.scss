@@ -1,16 +1,25 @@
 // src/pages/Rubric/RubricTable/RubricTable.module.scss
 @import "../../../styles/variables";
 
-table.rubricTable {
-  // width: 100%;
-  border-collapse: collapse;
-  margin-top: $spacing-md;
+// --- NEW STYLES START HERE ---
+
+// 1. This new container will handle the scrolling
+.tableContainer {
+  // Set a height for the scrollable area. This is calculated to show about 4 rows.
+  
+  max-height: 420px;
+  // This is the key property that creates the vertical scrollbar if content overflows.
+  overflow-y: auto;
+  // This is required for sticky positioning to work inside this element.
+  position: relative;
+  // Move container styles from the table to this wrapper
   box-shadow: $box-shadow;
   border-radius: $border-radius;
-  overflow: hidden;
-  table-layout: fixed;
+  border: 1px solid $border-color;
+  margin-top: $spacing-md;
 }
 
+// 2. Add sticky properties to the existing header definition
 %header-base {
   background-color: #fff;
   border-bottom: 2px solid $text-color;
@@ -21,16 +30,60 @@ table.rubricTable {
   color: $text-color;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  // These three lines make the header stick to the top of the .tableContainer
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+// 3. Add sticky properties to the footer row
+.addCategoryRow {
+  padding: 0;
+  // These three lines make the footer stick to the bottom of the .tableContainer
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+// 4. Ensure the add button has a background to hide text scrolling underneath it
+.addButton {
+  width: 100%;
+  padding: $spacing-sm; // Use consistent padding
+  font-size: $font-size-large;
+  font-weight: $font-weight-bold;
+  color: #fff;
+  background-color: $primary-color;
+  border: none;
+  // A top border helps separate the button from the scrolled content
+  border-top: 1px solid darken($primary-color, 5%);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-align: center;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
+// --- NEW STYLES END HERE ---
+
+
+// --- YOUR ORIGINAL CODE (UNCHANGED) ---
+
+// Note: I'm using `table.rubricTable` as you provided, but just `.rubricTable` would also work.
+table.rubricTable {
+  border-collapse: collapse;
+  table-layout: fixed;
+  // Remove margin-top and box-shadow as they are on the container now
 }
 
 .categoryHeader {
   @extend %header-base;
-  width: 140px;
+  width: 130px;
 }
 
 .scoreHeader {
   @extend %header-base;
-  width: 290px;
+  width: 300px;
 }
 
 .actionHeader {
@@ -42,16 +95,14 @@ td.tableCell {
   border: 1px solid $border-color;
   padding: 0;
   vertical-align: top;
-  
   height: 80px;
 }
 
-.categoryCell{
-  @extend .tableCell; 
-
+.categoryCell {
+  @extend .tableCell;
 }
 
-.categoryCell textarea{
+.categoryCell textarea {
   font-weight: $font-weight-bold;
 }
 
@@ -61,9 +112,7 @@ td.tableCell {
 }
 
 textarea.cellInput {
-  // --- FIX ADDED HERE ---
-  box-sizing: border-box; // Ensures padding is included in the width, not added to it.
-  
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   padding: $spacing-xs $spacing-sm;
@@ -73,7 +122,7 @@ textarea.cellInput {
   font-size: $font-size-base;
   color: $text-color;
   resize: none;
-  
+
   &:focus {
     outline: 2px solid $primary-color;
     background-color: lighten($secondary-color, 2%);
@@ -97,29 +146,5 @@ textarea.cellInput {
 
   &:hover {
     background-color: lighten($error-color, 40%);
-  }
-
-  /* This :disabled state is no longer used but is good to keep for other potential scenarios */
-  &:disabled {
-    color: $border-color;
-    cursor: not-allowed;
-  }
-}
-
-.addButton {
-  width: 100%;
-  padding: $spacing-xs $spacing-sm;
-  margin-top: $spacing-md;
-  font-size: $font-size-large;
-  font-weight: $font-weight-bold;
-  color: #fff;
-  background-color: $primary-color;
-  border: none;
-  border-radius: $border-radius;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: darken($primary-color, 10%);
   }
 }

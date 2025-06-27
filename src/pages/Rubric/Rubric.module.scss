@@ -3,7 +3,6 @@
 
 .rubricPage {
   display: grid;
-  // --- UPDATED GRID LAYOUT ---
   grid-template-columns: 1fr minmax(auto, 200px);
   gap: $spacing-lg;
 }
@@ -28,7 +27,6 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  // Allow the title container to grow
   flex-grow: 1; 
   min-width: 0;
 }
@@ -42,7 +40,7 @@
   font-weight: $font-weight-bold;
   font-family: $font-family-sans;
   padding: $spacing-xs 0;
-  width: 100%; // Ensure it fills the container
+  width: 100%;
 
   &:focus {
     outline: none;
@@ -56,13 +54,13 @@
   margin-top: 0;
 }
 
-// --- NEW STYLES FOR HEADER ACTIONS ---
 .headerActions {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
 }
 
+// --- UPDATED BUTTON & ICON SIZE ---
 %action-button {
   display: flex;
   align-items: center;
@@ -72,16 +70,16 @@
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
   padding: $spacing-xs;
-  height: 38px;
-  width: 38px;
+  height: 28px;
+  width: 28px;
 
   &:hover {
     transform: scale(1.05);
   }
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     stroke-width: 2.5;
   }
 }
