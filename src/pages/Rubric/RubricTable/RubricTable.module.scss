@@ -1,8 +1,8 @@
 // src/pages/Rubric/RubricTable/RubricTable.module.scss
 @import "../../../styles/variables";
 
-.rubricTable {
-  width: 100%;
+table.rubricTable {
+  // width: 100%;
   border-collapse: collapse;
   margin-top: $spacing-md;
   box-shadow: $box-shadow;
@@ -25,17 +25,17 @@
 
 .categoryHeader {
   @extend %header-base;
-  width: 150px;
+  width: 140px;
 }
 
 .scoreHeader {
   @extend %header-base;
-  width: 240px;
+  width: 290px;
 }
 
 .actionHeader {
   @extend %header-base;
-  width: 50px;
+  width: 10px;
 }
 
 td.tableCell {

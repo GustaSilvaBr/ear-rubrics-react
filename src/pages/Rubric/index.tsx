@@ -3,14 +3,31 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
 import { RubricTable } from "./RubricTable";
+import { StudentList } from "./StudentList";
+import { DropdownMenu } from "../../components/DropdownMenu"; // Import Dropdown
 import styles from "./Rubric.module.scss";
-const GRADE_LEVEL_OPTIONS = ["6th", "7th", "8th", "9th", "10th", "11th", "12th"];
+
+// --- NEW ICONS ---
+const ShareIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
+    </svg>
+);
+
+const OptionsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="1"></circle>
+        <circle cx="19" cy="12" r="1"></circle>
+        <circle cx="5" cy="12" r="1"></circle>
+    </svg>
+);
+
 
 export function Rubric() {
   const [searchParams] = useSearchParams();
   const [rubric, setRubric] = useState<IRubric | null>(null);
 
-  // Function to generate a unique ID
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };
@@ -24,20 +41,14 @@ export function Rubric() {
         teacherDocId: "",
         studentRubricGrade: [],
         header: {
-          title: "Untitled Rubric",
+          title: "Oral Project - Class debate",
           gradeLevels: [],
         },
         rubricLines: [
-          {
-            lineId: generateLineId(), // Assign an ID to the initial line
-            categoryName: "",
-            possibleScores: [
-              { score: 25, text: "" },
-              { score: 20, text: "" },
-              { score: 15, text: "" },
-              { score: 10, text: "" },
-            ],
-          },
+          { lineId: generateLineId(), categoryName: "Respect for other Team", possibleScores: [ { score: 25, text: "All statements, body language, and responses were respectful and were in appropriate language." }, { score: 20, text: "Statements and responses were respectful and used appropriate language, but once or twice body language was not." }, { score: 15, text: "Most statements and responses were respectful and in appropriate language, but there was one sarcastic remark." }, { score: 10, text: "Statements, responses and/or body language were consistently not respectful." }] },
+          { lineId: generateLineId(), categoryName: "Information", possibleScores: [ { score: 25, text: "All information presented in the debate was clear, accurate and thorough." }, { score: 20, text: "Most information presented in the debate was clear, accurate and thorough." }, { score: 15, text: "Most information presented in the debate was clear and accurate, but was not usually thorough." }, { score: 10, text: "Information had several inaccuracies OR was usually not clear." }] },
+          { lineId: generateLineId(), categoryName: "Rebuttal", possibleScores: [ { score: 25, text: "All counter-arguments were accurate, relevant and strong." }, { score: 20, text: "Most counter-arguments were accurate, relevant, and strong." }, { score: 15, text: "Most counter-arguments were accurate and relevant, but several were weak." }, { score: 10, text: "Counter-arguments were not accurate and/or relevant" }] },
+          { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] }
         ],
       };
       setRubric(newRubric);
@@ -52,30 +63,12 @@ export function Rubric() {
     });
   };
 
-  const handleGradeLevelChange = (grade: string) => {
-    if (!rubric) return;
-    const currentGrades = rubric.header.gradeLevels;
-    const newGrades = currentGrades.includes(grade)
-      ? currentGrades.filter((g) => g !== grade)
-      : [...currentGrades, grade];
-
-    setRubric({
-      ...rubric,
-      header: { ...rubric.header, gradeLevels: newGrades },
-    });
-  };
-
   const handleAddCategory = () => {
     if (!rubric) return;
     const newCategory: IRubricLine = {
-      lineId: generateLineId(), // Assign an ID when a new line is created
+      lineId: generateLineId(),
       categoryName: "",
-      possibleScores: [
-        { score: 25, text: "" },
-        { score: 20, text: "" },
-        { score: 15, text: "" },
-        { score: 10, text: "" },
-      ],
+      possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ],
     };
     setRubric({ ...rubric, rubricLines: [...rubric.rubricLines, newCategory] });
   };
@@ -85,67 +78,72 @@ export function Rubric() {
     const updatedLines = rubric.rubricLines.filter(
       (line) => line.lineId !== lineId
     );
-
-    setRubric({
-      ...rubric,
-      rubricLines: updatedLines,
-    });
+    setRubric({ ...rubric, rubricLines: updatedLines });
+  };
+  
+  // Placeholder actions for the new buttons
+  const handleShare = () => {
+    alert("Share action!");
   };
 
-  const handleSaveRubric = () => {
-    if (!rubric) return;
-    const savedRubricsRaw = localStorage.getItem("rubrics");
-    const savedRubrics = savedRubricsRaw ? JSON.parse(savedRubricsRaw) : [];
-    const updatedRubrics = [...savedRubrics, rubric];
-    localStorage.setItem("rubrics", JSON.stringify(updatedRubrics));
-    alert("Rubric saved to localStorage!");
-    console.log("Updated list of rubrics in localStorage:", updatedRubrics);
+  const handleEdit = () => {
+    alert("Edit action!");
   };
+
+  const handleDelete = () => {
+    // A custom modal would be better than window.confirm in a real app
+    if (confirm("Are you sure you want to delete this rubric?")) {
+        alert("Delete action confirmed!");
+    }
+  };
+
 
   if (!rubric) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className={styles.rubricContainer}>
-      {/* --- UPDATED ---: The header structure was refactored significantly. */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          {/* Title is now an input field */}
-          <input
-            type="text"
-            value={String(rubric.header.title)}
-            onChange={handleTitleChange}
-            className={styles.titleInput}
-            placeholder="Untitled Rubric"
-          />
-          {/* Grade level selector was added */}
-          <div className={styles.gradeSelector}>
-            <span className={styles.gradeLabel}>Grade Levels:</span>
-            {GRADE_LEVEL_OPTIONS.map((grade) => (
-              <label key={grade} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={rubric.header.gradeLevels.includes(grade)}
-                  onChange={() => handleGradeLevelChange(grade)}
-                />
-                {grade}
-              </label>
-            ))}
+    <div className={styles.rubricPage}>
+      <div className={styles.rubricContent}>
+        <header className={styles.header}>
+          <div className={styles.headerContent}>
+            <input
+              type="text"
+              value={String(rubric.header.title)}
+              onChange={handleTitleChange}
+              className={styles.titleInput}
+              placeholder="Untitled Rubric"
+            />
           </div>
-        </div>
-        {/* Save button was added to the header */}
-        <button onClick={handleSaveRubric} className={styles.saveButton}>
-          Save Rubric
-        </button>
-      </header>
-      <hr className={styles.divider} />
+          
+          <div className={styles.headerActions}>
+            <button onClick={handleShare} className={styles.shareButton} aria-label="Share Rubric">
+              <ShareIcon />
+            </button>
+            <DropdownMenu
+              trigger={
+                <button className={styles.optionsButton} aria-label="Rubric Options">
+                  <OptionsIcon />
+                </button>
+              }
+            >
+              <button onClick={handleEdit}>Edit</button>
+              <button onClick={handleDelete}>Delete</button>
+            </DropdownMenu>
+          </div>
+        </header>
+        <hr className={styles.divider} />
 
-      <RubricTable
-        rubricLines={rubric.rubricLines}
-        onAddCategory={handleAddCategory}
-        onRemoveCategory={handleRemoveCategory}
-      />
+        <RubricTable
+          rubricLines={rubric.rubricLines}
+          onAddCategory={handleAddCategory}
+          onRemoveCategory={handleRemoveCategory}
+        />
+      </div>
+      
+      <div className={styles.studentListSidebar}>
+        <StudentList />
+      </div>
     </div>
   );
 }

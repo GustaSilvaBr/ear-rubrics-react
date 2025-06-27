@@ -1,0 +1,48 @@
+// src/pages/Rubric/StudentList/StudentAutocomplete/StudentAutocomplete.module.scss
+@import "../../../../styles/variables";
+
+.autocompleteWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  padding: $spacing-sm;
+  font-size: $font-size-base;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px lighten($primary-color, 40%);
+  }
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid $border-color;
+  border-top: none;
+  border-radius: 0 0 $border-radius $border-radius;
+  box-shadow: $box-shadow;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.dropdownItem {
+  padding: $spacing-sm;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $secondary-color;
+  }
+}

@@ -1,14 +1,25 @@
 // src/pages/Rubric/Rubric.module.scss
 @import "../../styles/variables";
 
-.rubricContainer {
-  // Page-specific container
+.rubricPage {
+  display: grid;
+  // --- UPDATED GRID LAYOUT ---
+  grid-template-columns: 1fr minmax(auto, 200px);
+  gap: $spacing-lg;
+}
+
+.rubricContent {
+  min-width: 0;
+}
+
+.studentListSidebar {
+  // Styles for the sidebar
 }
 
 .header {
   display: flex;
-  justify-content: space-between; // To space out content and save button
-  align-items: center;
+  justify-content: space-between;
+  align-items: baseline;
   gap: $spacing-md;
   margin-bottom: $spacing-sm;
 }
@@ -17,6 +28,9 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
+  // Allow the title container to grow
+  flex-grow: 1; 
+  min-width: 0;
 }
 
 .titleInput {
@@ -27,31 +41,13 @@
   font-size: $font-size-xl;
   font-weight: $font-weight-bold;
   font-family: $font-family-sans;
-  padding: 0;
+  padding: $spacing-xs 0;
+  width: 100%; // Ensure it fills the container
 
   &:focus {
     outline: none;
     border-bottom: 2px solid $primary-color;
   }
-}
-
-.gradeSelector {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.gradeLabel {
-  font-size: $font-size-base;
-  color: darken($text-color, 10%);
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: $spacing-xs / 2;
-  font-size: $font-size-base;
-  cursor: pointer;
 }
 
 .divider {
@@ -60,19 +56,52 @@
   margin-top: 0;
 }
 
-.saveButton {
-  padding: $spacing-sm $spacing-lg;
-  font-size: $font-size-large;
-  font-weight: $font-weight-bold;
-  color: #fff;
-  background-color: $success-color;
+// --- NEW STYLES FOR HEADER ACTIONS ---
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+%action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: $border-radius;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  white-space: nowrap; // Prevent button text from wrapping
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  padding: $spacing-xs;
+  height: 38px;
+  width: 38px;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+  }
+}
+
+.shareButton {
+  @extend %action-button;
+  background-color: $success-color;
+  color: #fff;
 
   &:hover {
     background-color: darken($success-color, 10%);
+  }
+}
+
+.optionsButton {
+  @extend %action-button;
+  background-color: darken($border-color, 15%);
+  color: $text-color;
+
+  &:hover {
+    background-color: darken($border-color, 25%);
   }
 }

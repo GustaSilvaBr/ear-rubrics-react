@@ -1,0 +1,45 @@
+// src/components/DropdownMenu/DropdownMenu.module.scss
+@import "../../styles/variables";
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  cursor: pointer;
+  display: flex; // To ensure button inside is clickable
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  z-index: 1000;
+  min-width: 140px;
+  list-style: none;
+  padding: $spacing-xs 0;
+  margin-top: $spacing-xs;
+
+  button,
+  a {
+    display: block;
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    text-align: left;
+    background: none;
+    border: none;
+    color: $text-color;
+    font-size: $font-size-base;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    &:hover {
+      background-color: $secondary-color;
+    }
+  }
+}
