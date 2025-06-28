@@ -31,7 +31,6 @@ export function Rubric() {
   // 1. Add state to track the currently selected student
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>(null);
 
-
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };

@@ -9,7 +9,7 @@
 
   max-height: 420px;
   // This is the key property that creates the vertical scrollbar if content overflows.
-  overflow-y: auto;
+  overflow-y: scroll;
   // This is required for sticky positioning to work inside this element.
   position: relative;
   // Move container styles from the table to this wrapper
@@ -96,7 +96,7 @@ td.tableCell {
   border: 1px solid $border-color;
   padding: 0;
   vertical-align: top;
-  height: 80px;
+  height: 90px;
   // Add cursor pointer for grading
   cursor: pointer;
 
