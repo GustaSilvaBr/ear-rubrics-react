@@ -60,7 +60,6 @@
   gap: $spacing-sm;
 }
 
-// --- UPDATED BUTTON & ICON SIZE ---
 %action-button {
   display: flex;
   align-items: center;
@@ -101,5 +100,34 @@
 
   &:hover {
     background-color: darken($border-color, 25%);
+  }
+}
+
+// --- NEW BUTTON STYLES FOR EDIT MODE ---
+.saveButton, .cancelButton {
+  height: auto;
+  width: auto;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+}
+
+.saveButton {
+  background-color: $success-color;
+  color: #fff;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: $text-color;
+  border: 1px solid $border-color;
+
+  &:hover {
+    background-color: darken($border-color, 5%);
   }
 }

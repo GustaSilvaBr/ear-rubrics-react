@@ -65,12 +65,6 @@
   }
 }
 
-// --- NEW STYLES END HERE ---
-
-
-// --- YOUR ORIGINAL CODE (UNCHANGED) ---
-
-// Note: I'm using `table.rubricTable` as you provided, but just `.rubricTable` would also work.
 table.rubricTable {
   border-collapse: collapse;
   table-layout: fixed;
@@ -97,8 +91,21 @@ td.tableCell {
   padding: 0;
   vertical-align: top;
   height: 90px;
-  // Add cursor pointer for grading
-  cursor: pointer;
+
+  // --- NEW: Add cursor pointer for grading ---
+  &.gradingMode {
+    &:hover {
+      background-color: lighten($success-color, 60%);
+    }
+
+    textarea {
+      cursor: pointer;
+    }
+  }
+
+  &.editingMode {
+    cursor: text;
+  }
 
   // Add a selected state
   &.selected {
@@ -109,6 +116,7 @@ td.tableCell {
     }
   }
 }
+
 
 .categoryCell {
   @extend .tableCell;

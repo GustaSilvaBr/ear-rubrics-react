@@ -8,7 +8,7 @@ import { StudentList } from "./StudentList";
 import { DropdownMenu } from "../../components/DropdownMenu";
 import styles from "./Rubric.module.scss";
 
-// --- ICONS (unchanged) ---
+// --- ICONS ---
 const ShareIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
@@ -23,20 +23,21 @@ const OptionsIcon = () => (
     </svg>
 );
 
-
 export function Rubric() {
   const [searchParams] = useSearchParams();
   const [rubric, setRubric] = useState<IRubric | null>(null);
   const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
-  // 1. Add state to track the currently selected student
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>(null);
+
+  // --- NEW STATE FOR EDITION MODE ---
+  const [editionMode, setEditionMode] = useState(false);
+  const [originalRubric, setOriginalRubric] = useState<IRubric | null>(null);
 
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };
 
   useEffect(() => {
-    // ... (useEffect content is unchanged)
     const rubricId = searchParams.get("id");
     if (rubricId) {
       // Logic for fetching an existing rubric would go here
@@ -67,6 +68,32 @@ export function Rubric() {
     });
   };
 
+  const handleRubricLineChange = (
+    lineId: String,
+    field: "categoryName" | "scoreText",
+    value: string,
+    scoreIndex?: number
+  ) => {
+    if (!rubric) return;
+  
+    const updatedLines = rubric.rubricLines.map((line) => {
+      if (line.lineId === lineId) {
+        const newLine = { ...line };
+        if (field === "categoryName") {
+          newLine.categoryName = value;
+        } else if (field === "scoreText" && scoreIndex !== undefined) {
+          const newScores = [...line.possibleScores] as { score: number; text: String }[];
+          newScores[scoreIndex] = { ...newScores[scoreIndex], text: value };
+          newLine.possibleScores = newScores as IRubricLine['possibleScores'];
+        }
+        return newLine;
+      }
+      return line;
+    });
+  
+    setRubric({ ...rubric, rubricLines: updatedLines });
+  };
+
   const handleAddCategory = () => {
     if (!rubric) return;
     const newCategory: IRubricLine = {
@@ -87,6 +114,7 @@ export function Rubric() {
   
   const handleAssignStudent = (student: IStudent) => {
     if (!rubric) return;
+    if (assignedStudents.find(s => s.studentDocId === student.studentDocId)) return;
     setAssignedStudents([...assignedStudents, student]);
     const newStudentGrade: IStudentRubricGrade = {
       studentDocId: student.studentDocId,
@@ -100,7 +128,6 @@ export function Rubric() {
 
   const handleRemoveStudent = (studentDocId: String) => {
     if (!rubric) return;
-    // If the student being removed is the currently selected one, deselect them.
     if (selectedStudent?.studentDocId === studentDocId) {
       setSelectedStudent(null);
     }
@@ -113,23 +140,19 @@ export function Rubric() {
     setRubric({ ...rubric, studentRubricGrade: updatedGrades });
   };
 
-  // 2. Add the handler for grading a cell
   const handleGradeSelect = (categoryIndex: number, gradingIndex: number) => {
-    // Rule 3: The teacher can only give grades after selecting a student
+    if (editionMode) return; // Grading is disabled in edition mode
     if (!selectedStudent || !rubric) {
       alert("Please select a student before assigning grades.");
       return;
     }
 
     const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
-      // Find the currently selected student's grade object
       if (studentGrade.studentDocId === selectedStudent.studentDocId) {
-        // Rule 2: Remove any existing grade for this category
         const filteredGrades = studentGrade.rubricGradesLocation.filter(
           (grade) => grade.categoryIndex !== categoryIndex
         );
         
-        // Add the new grade
         return {
           ...studentGrade,
           rubricGradesLocation: [
@@ -143,28 +166,36 @@ export function Rubric() {
     setRubric({ ...rubric, studentRubricGrade: newGrades });
   };
 
-  // ... (handleShare, handleEdit, handleDelete are unchanged)
-    const handleShare = () => {
-    alert("Share action!");
-  };
-
   const handleEdit = () => {
-    alert("Edit action!");
+    setOriginalRubric(rubric);
+    setEditionMode(true);
   };
 
+  const handleSaveChanges = () => {
+    setEditionMode(false);
+    setOriginalRubric(null);
+    alert("Changes saved!");
+  };
+
+  const handleCancel = () => {
+    if (originalRubric) {
+      setRubric(originalRubric);
+    }
+    setEditionMode(false);
+    setOriginalRubric(null);
+  };
+
+  const handleShare = () => alert("Share action!");
   const handleDelete = () => {
-    // A custom modal would be better than window.confirm in a real app
     if (confirm("Are you sure you want to delete this rubric?")) {
         alert("Delete action confirmed!");
     }
   };
 
-
   if (!rubric) {
     return <div>Loading...</div>;
   }
 
-  // Find the grades for the currently selected student to pass to the table
   const selectedStudentGrades = rubric.studentRubricGrade.find(
     (g) => g.studentDocId === selectedStudent?.studentDocId
   )?.rubricGradesLocation;
@@ -172,7 +203,6 @@ export function Rubric() {
   return (
     <div className={styles.rubricPage}>
       <div className={styles.rubricContent}>
-        {/* ... (header is unchanged) ... */}
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <input
@@ -181,23 +211,37 @@ export function Rubric() {
               onChange={handleTitleChange}
               className={styles.titleInput}
               placeholder="Untitled Rubric"
+              readOnly={!editionMode}
             />
           </div>
           
           <div className={styles.headerActions}>
-            <button onClick={handleShare} className={styles.shareButton} aria-label="Share Rubric">
-              <ShareIcon />
-            </button>
-            <DropdownMenu
-              trigger={
-                <button className={styles.optionsButton} aria-label="Rubric Options">
-                  <OptionsIcon />
+            {editionMode ? (
+              <>
+                <button onClick={handleSaveChanges} className={styles.saveButton}>
+                  Save Changes
                 </button>
-              }
-            >
-              <button onClick={handleEdit}>Edit</button>
-              <button onClick={handleDelete}>Delete</button>
-            </DropdownMenu>
+                <button onClick={handleCancel} className={styles.cancelButton}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={handleShare} className={styles.shareButton} aria-label="Share Rubric">
+                  <ShareIcon />
+                </button>
+                <DropdownMenu
+                  trigger={
+                    <button className={styles.optionsButton} aria-label="Rubric Options">
+                      <OptionsIcon />
+                    </button>
+                  }
+                >
+                  <button onClick={handleEdit}>Edit</button>
+                  <button onClick={handleDelete}>Delete</button>
+                </DropdownMenu>
+              </>
+            )}
           </div>
         </header>
         <hr className={styles.divider} />
@@ -205,10 +249,11 @@ export function Rubric() {
         <RubricTable
           rubricLines={rubric.rubricLines}
           selectedStudentGrades={selectedStudentGrades}
+          editionMode={editionMode}
           onAddCategory={handleAddCategory}
           onRemoveCategory={handleRemoveCategory}
-          // 3. Pass the new handler to the table
           onGradeSelect={handleGradeSelect}
+          onRubricLineChange={handleRubricLineChange}
         />
       </div>
       
@@ -218,7 +263,6 @@ export function Rubric() {
           selectedStudent={selectedStudent}
           onAssignStudent={handleAssignStudent}
           onRemoveStudent={handleRemoveStudent}
-          // 4. Pass the student selection handler
           onSelectStudent={setSelectedStudent}
         />
       </div>

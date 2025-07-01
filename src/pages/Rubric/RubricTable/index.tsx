@@ -4,25 +4,26 @@ import styles from "./RubricTable.module.scss";
 
 interface RubricTableProps {
   rubricLines: IRubricLine[];
-  // Receive the grades for the selected student
   selectedStudentGrades?: IStudentRubricGrade['rubricGradesLocation'];
+  editionMode: boolean;
   onAddCategory: () => void;
   onRemoveCategory: (lineId: String) => void;
-  // Receive the grading handler
   onGradeSelect: (categoryIndex: number, gradingIndex: number) => void;
+  onRubricLineChange: (lineId: String, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => void;
 }
 
 export function RubricTable({
   rubricLines,
-  selectedStudentGrades = [], // Default to an empty array
+  selectedStudentGrades = [],
+  editionMode,
   onAddCategory,
   onRemoveCategory,
   onGradeSelect,
+  onRubricLineChange,
 }: RubricTableProps) {
   return (
     <div className={styles.tableContainer}>
       <table className={styles.rubricTable}>
-        {/* ... (thead is unchanged) ... */}
         <thead>
           <tr>
             <th className={styles.categoryHeader}>Category</th>
@@ -36,56 +37,59 @@ export function RubricTable({
         <tbody>
           {rubricLines.map((line, categoryIndex) => (
             <tr key={String(line.lineId)}>
-              <td className={styles.categoryCell}>
+              <td className={`${styles.tableCell} ${!editionMode ? styles.gradingMode : styles.editingMode}`}>
                 <textarea
                   className={styles.cellInput}
-                  defaultValue={String(line.categoryName)}
+                  value={String(line.categoryName)}
+                  onChange={(e) => onRubricLineChange(line.lineId, "categoryName", e.target.value)}
                   placeholder="Category Name..."
+                  readOnly={!editionMode}
                 />
               </td>
               {line.possibleScores.map((score, gradingIndex) => {
-                // Check if this cell is the selected grade for this category
                 const isSelected = selectedStudentGrades.some(
                   g => g.categoryIndex === categoryIndex && g.gradingIndex === gradingIndex
                 );
                 return (
                   <td 
                     key={gradingIndex} 
-                    // Add the 'selected' class if it is
-                    className={`${styles.tableCell} ${isSelected ? styles.selected : ''}`}
-                    // Add the onClick handler
+                    className={`${styles.tableCell} ${isSelected ? styles.selected : ''} ${!editionMode ? styles.gradingMode : styles.editingMode}`}
                     onClick={() => onGradeSelect(categoryIndex, gradingIndex)}
                   >
                     <textarea
                       className={styles.cellInput}
-                      defaultValue={String(score.text)}
+                      value={String(score.text)}
+                      onChange={(e) => onRubricLineChange(line.lineId, "scoreText", e.target.value, gradingIndex)}
                       placeholder="Description..."
-                      readOnly // Make the textareas read-only during grading
+                      readOnly={!editionMode}
                     />
                   </td>
                 )
               })}
               <td className={styles.actionCell}>
-                <button
-                  onClick={() => onRemoveCategory(line.lineId)}
-                  className={styles.deleteButton}
-                >
-                  -
-                </button>
+                {editionMode && (
+                  <button
+                    onClick={() => onRemoveCategory(line.lineId)}
+                    className={styles.deleteButton}
+                  >
+                    -
+                  </button>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
-        {/* ... (tfoot is unchanged) ... */}
-        <tfoot>
-          <tr>
-            <td colSpan={6} className={styles.addCategoryRow}>
-              <button onClick={onAddCategory} className={styles.addButton}>
-                + Add Category
-              </button>
-            </td>
-          </tr>
-        </tfoot>
+        {editionMode && (
+          <tfoot>
+            <tr>
+              <td colSpan={6} className={styles.addCategoryRow}>
+                <button onClick={onAddCategory} className={styles.addButton}>
+                  + Add Category
+                </button>
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
     </div>
   );
