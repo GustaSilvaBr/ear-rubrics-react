@@ -28,10 +28,29 @@ export function Rubric() {
   const [rubric, setRubric] = useState<IRubric | null>(null);
   const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>(null);
-
-  // --- NEW STATE FOR EDITION MODE ---
   const [editionMode, setEditionMode] = useState(false);
   const [originalRubric, setOriginalRubric] = useState<IRubric | null>(null);
+  const [maxGrade, setMaxGrade] = useState(0);
+
+  useEffect(() => {
+    if (!rubric) return;
+
+    let validLines = [...rubric.rubricLines];
+    for (let i = validLines.length - 1; i >= 0; i--) {
+        const line = validLines[i];
+        const isCategoryEmpty = String(line.categoryName).trim() === '';
+        const areScoresEmpty = (line.possibleScores as {text: String}[]).every(score => String(score.text).trim() === '');
+        
+        if (isCategoryEmpty && areScoresEmpty) {
+            validLines.pop();
+        } else {
+            break;
+        }
+    }
+
+    setMaxGrade(validLines.length * 25);
+  }, [rubric?.rubricLines]);
+
 
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
@@ -113,12 +132,12 @@ export function Rubric() {
   };
   
   const handleAssignStudent = (student: IStudent) => {
-    if (!rubric) return;
-    if (assignedStudents.find(s => s.studentDocId === student.studentDocId)) return;
+    if (!rubric || assignedStudents.find(s => s.studentDocId === student.studentDocId)) return;
     setAssignedStudents([...assignedStudents, student]);
     const newStudentGrade: IStudentRubricGrade = {
       studentDocId: student.studentDocId,
       rubricGradesLocation: [],
+      currentGrade: 0,
     };
     setRubric({
       ...rubric,
@@ -141,24 +160,30 @@ export function Rubric() {
   };
 
   const handleGradeSelect = (categoryIndex: number, gradingIndex: number) => {
-    if (editionMode) return; // Grading is disabled in edition mode
-    if (!selectedStudent || !rubric) {
-      alert("Please select a student before assigning grades.");
+    if (editionMode || !selectedStudent || !rubric) {
+      if (!selectedStudent) alert("Please select a student before assigning grades.");
       return;
     }
 
     const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
       if (studentGrade.studentDocId === selectedStudent.studentDocId) {
-        const filteredGrades = studentGrade.rubricGradesLocation.filter(
-          (grade) => grade.categoryIndex !== categoryIndex
-        );
+        const newRubricGradesLocation = [
+          ...studentGrade.rubricGradesLocation.filter(grade => grade.categoryIndex !== categoryIndex),
+          { categoryIndex, gradingIndex },
+        ];
+
+        const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
+            const line = rubric.rubricLines[grade.categoryIndex];
+            if (line && line.possibleScores[grade.gradingIndex]) {
+                return total + line.possibleScores[grade.gradingIndex].score;
+            }
+            return total;
+        }, 0);
         
         return {
           ...studentGrade,
-          rubricGradesLocation: [
-            ...filteredGrades,
-            { categoryIndex, gradingIndex },
-          ],
+          rubricGradesLocation: newRubricGradesLocation,
+          currentGrade: newCurrentGrade,
         };
       }
       return studentGrade;
@@ -200,6 +225,10 @@ export function Rubric() {
     (g) => g.studentDocId === selectedStudent?.studentDocId
   )?.rubricGradesLocation;
 
+  const selectedStudentGradeInfo = rubric.studentRubricGrade.find(
+    (g) => g.studentDocId === selectedStudent?.studentDocId
+  );
+
   return (
     <div className={styles.rubricPage}>
       <div className={styles.rubricContent}>
@@ -213,6 +242,14 @@ export function Rubric() {
               placeholder="Untitled Rubric"
               readOnly={!editionMode}
             />
+            {selectedStudent && selectedStudentGradeInfo && !editionMode && (
+              <div className={styles.gradingStudentInfo}>
+              {selectedStudent.name + ": "}
+                <span className={styles.gradePill}>
+                  <strong>{selectedStudentGradeInfo.currentGrade === 0 ? '-' : `${selectedStudentGradeInfo.currentGrade} / ${maxGrade}`}</strong>
+                </span>
+              </div>
+            )}
           </div>
           
           <div className={styles.headerActions}>
@@ -260,6 +297,8 @@ export function Rubric() {
       <div className={styles.studentListSidebar}>
         <StudentList 
           assignedStudents={assignedStudents}
+          studentRubricGrades={rubric.studentRubricGrade}
+          maxGrade={maxGrade}
           selectedStudent={selectedStudent}
           onAssignStudent={handleAssignStudent}
           onRemoveStudent={handleRemoveStudent}

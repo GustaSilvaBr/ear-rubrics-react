@@ -8,10 +8,6 @@
   padding: 0 $spacing-md;
   background-color: lighten($secondary-color, 3%);
   border-left: 1px solid $border-color;
-
-  // --- UPDATED STYLES ---
-  // Match the max-height of the table's container to ensure vertical alignment
-  // and provide a fixed boundary for the overflow to work.
   max-height: 460px;
 }
 
@@ -21,20 +17,33 @@
   margin-top: $spacing-sm;
   padding-bottom: $spacing-sm;
   border-bottom: 1px solid $border-color;
-  // Prevent the title from shrinking if space is tight
   flex-shrink: 0;
+}
+
+.gradingStudentInfo {
+  font-size: $font-size-base;
+  color: lighten($text-color, 30%);
+  margin-top: -$spacing-xs;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.gradePill {
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  background-color: lighten($secondary-color, 3%);
+  padding: 2px $spacing-sm;
+  border-radius: 12px;
+  border: 1px solid $primary-color;
 }
 
 .assignedList {
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  // --- UPDATED STYLES ---
-  // Allow the list to take up all available vertical space.
   flex-grow: 1;
-  // Add a scrollbar only when the content overflows its container.
   overflow-y: auto;
-  // A crucial fix for flexbox that allows overflow to work correctly.
   min-height: 0;
 }
 
@@ -47,15 +56,29 @@
   border-radius: $border-radius;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-size: $font-size-base;
-  // Add cursor pointer to indicate it's clickable
   cursor: pointer;
   transition: background-color 0.2s ease;
 
-  // Add a selected state
   &.selected {
     background-color: $secondary-color;
     border: 1px solid $primary-color;
   }
+}
+
+.studentName {
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.studentGrade {
+  margin: 0 $spacing-sm;
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  flex-shrink: 0;
+  min-width: 60px; // Ensures consistent width
+  text-align: center; // Aligns the text
 }
 
 .removeButton {
@@ -65,6 +88,7 @@
   font-size: $font-size-large;
   cursor: pointer;
   padding: 0 $spacing-xs;
+  flex-shrink: 0;
 
   &:hover {
     color: darken($error-color, 15%);

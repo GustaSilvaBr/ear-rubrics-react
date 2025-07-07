@@ -1,12 +1,14 @@
 // src/pages/Rubric/StudentList/index.tsx
 import type { IStudent } from "../../../interfaces/IStudent";
+import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
 import { mockStudents } from "../../../data/mockStudents";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
 interface StudentListProps {
   assignedStudents: IStudent[];
-  // Add selectedStudent and a handler to set it
+  studentRubricGrades: IStudentRubricGrade[];
+  maxGrade: number; // Receive maxGrade
   selectedStudent: IStudent | null;
   onAssignStudent: (student: IStudent) => void;
   onRemoveStudent: (studentId: String) => void;
@@ -15,6 +17,8 @@ interface StudentListProps {
 
 export function StudentList({
   assignedStudents,
+  studentRubricGrades,
+  maxGrade,
   selectedStudent,
   onAssignStudent,
   onRemoveStudent,
@@ -39,19 +43,21 @@ export function StudentList({
       <div className={styles.assignedList}>
         {assignedStudents.length > 0 ? (
           assignedStudents.map((student) => {
-            // Check if the current student is the selected one
             const isSelected = selectedStudent?.studentDocId === student.studentDocId;
+            const studentGrade = studentRubricGrades.find(g => g.studentDocId === student.studentDocId);
+            const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
+
             return (
               <div 
                 key={String(student.studentDocId)} 
-                // Add the 'selected' class conditionally
                 className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
-                // Add onClick to select the student
                 onClick={() => onSelectStudent(student)}
               >
-                <span>{student.name}</span>
+                <span className={styles.studentName}>{student.name}</span>
+                <span className={styles.studentGrade}>
+                  {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
+                </span>
                 <button
-                  // Stop click propagation to prevent selecting when removing
                   onClick={(e) => {
                     e.stopPropagation(); 
                     onRemoveStudent(student.studentDocId);

@@ -26,7 +26,8 @@ export interface IStudentRubricGrade{
     rubricGradesLocation : {
         categoryIndex: number,
         gradingIndex: number,
-    }[]
+    }[],
+    currentGrade: number,
 }
 
 export interface IRubric{
