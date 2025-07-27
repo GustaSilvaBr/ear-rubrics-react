@@ -1,0 +1,70 @@
+// src/pages/Home/Home.module.scss
+@import "../../styles/variables";
+
+.homeContainer {
+  padding: $spacing-lg;
+}
+
+.title {
+  font-size: $font-size-title;
+  color: $primary-color;
+  margin-bottom: $spacing-md;
+}
+
+.rubricGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: $spacing-md;
+}
+
+.rubricCard,
+.addRubricCard {
+  background-color: $background-color;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 120px;
+  text-decoration: none; // Remove underline for Link component
+  color: $text-color;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.rubricName {
+  font-size: $font-size-large;
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  margin-bottom: $spacing-xs;
+}
+
+.studentCount {
+  font-size: $font-size-base;
+  color: lighten($text-color, 20%);
+}
+
+.addRubricCard {
+  background-color: #ffffff; // Alterado para branco
+  color: $primary-color;
+  border: 1px dashed $primary-color; // Dashed border for "add" feel
+
+  &:hover {
+    background-color: lighten($primary-color, 45%);
+    border-color: darken($primary-color, 10%);
+  }
+
+  .plusIcon {
+    font-size: $font-size-title * 1.5; // Larger plus sign
+    font-weight: $font-weight-bold;
+    line-height: 1; // Adjust line height to center it vertically
+  }
+}
