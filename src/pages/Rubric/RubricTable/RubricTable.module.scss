@@ -115,6 +115,22 @@ td.tableCell {
       background-color: transparent; // Ensure textarea doesn't hide the background
     }
   }
+
+  // Novo estilo para células desabilitadas
+  &.disabledForGrading {
+    background-color: lighten($background-color, 3%); // Um fundo ligeiramente mais escuro
+    cursor: not-allowed; // Indicar que não é clicável
+
+    textarea {
+      cursor: not-allowed;
+      background-color: transparent; // Garantir que a textarea não esconda o fundo
+      opacity: 0.7; // Deixar o texto ligeiramente desbotado
+    }
+
+    &:hover {
+      background-color: lighten($background-color, 3%); // Prevenir efeito hover
+    }
+  }
 }
 
 

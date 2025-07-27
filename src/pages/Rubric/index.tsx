@@ -31,24 +31,26 @@ export function Rubric() {
   const [editionMode, setEditionMode] = useState(false);
   const [originalRubric, setOriginalRubric] = useState<IRubric | null>(null);
   const [maxGrade, setMaxGrade] = useState(0);
+  const [gradableLineIds, setGradableLineIds] = useState<String[]>([]);
 
   useEffect(() => {
     if (!rubric) return;
 
-    let validLines = [...rubric.rubricLines];
-    for (let i = validLines.length - 1; i >= 0; i--) {
-        const line = validLines[i];
+    let tempValidLines = [...rubric.rubricLines];
+    for (let i = tempValidLines.length - 1; i >= 0; i--) {
+        const line = tempValidLines[i];
         const isCategoryEmpty = String(line.categoryName).trim() === '';
         const areScoresEmpty = (line.possibleScores as {text: String}[]).every(score => String(score.text).trim() === '');
         
         if (isCategoryEmpty && areScoresEmpty) {
-            validLines.pop();
+            tempValidLines.pop();
         } else {
             break;
         }
     }
 
-    setMaxGrade(validLines.length * 25);
+    setMaxGrade(tempValidLines.length * 25);
+    setGradableLineIds(tempValidLines.map(line => line.lineId));
   }, [rubric?.rubricLines]);
 
 
@@ -125,10 +127,47 @@ export function Rubric() {
 
   const handleRemoveCategory = (lineId: String) => {
     if (!rubric) return;
-    const updatedLines = rubric.rubricLines.filter(
+
+    // Find the index of the line to be removed
+    const removedLineIndex = rubric.rubricLines.findIndex(line => line.lineId === lineId);
+    if (removedLineIndex === -1) return;
+
+    // Filter out the removed line from rubricLines
+    const updatedRubricLines = rubric.rubricLines.filter(
       (line) => line.lineId !== lineId
     );
-    setRubric({ ...rubric, rubricLines: updatedLines });
+
+    // Update studentRubricGrade
+    const updatedStudentRubricGrade = rubric.studentRubricGrade.map(studentGrade => {
+        const newRubricGradesLocation = studentGrade.rubricGradesLocation
+            .filter(grade => grade.categoryIndex !== removedLineIndex) // Remove grades from the deleted line
+            .map(grade => ({
+                // Adjust categoryIndex for lines after the removed one
+                categoryIndex: grade.categoryIndex > removedLineIndex ? grade.categoryIndex - 1 : grade.categoryIndex,
+                gradingIndex: grade.gradingIndex,
+            }));
+
+        // Recalculate currentGrade based on updated grades and new rubricLines structure
+        const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
+            const line = updatedRubricLines[grade.categoryIndex]; // Use updatedRubricLines
+            if (line && line.possibleScores[grade.gradingIndex] && gradableLineIds.includes(line.lineId)) {
+                return total + line.possibleScores[grade.gradingIndex].score;
+            }
+            return total;
+        }, 0);
+
+        return {
+            ...studentGrade,
+            rubricGradesLocation: newRubricGradesLocation,
+            currentGrade: newCurrentGrade,
+        };
+    });
+
+    setRubric({ 
+        ...rubric, 
+        rubricLines: updatedRubricLines,
+        studentRubricGrade: updatedStudentRubricGrade, // Update student grades as well
+    });
   };
   
   const handleAssignStudent = (student: IStudent) => {
@@ -165,6 +204,12 @@ export function Rubric() {
       return;
     }
 
+    // Verificar se a linha selecionada é avaliável antes de prosseguir
+    const selectedLineId = rubric.rubricLines[categoryIndex]?.lineId;
+    if (!gradableLineIds.includes(selectedLineId)) {
+        return; // Não faça nada se a linha não for avaliável
+    }
+
     const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
       if (studentGrade.studentDocId === selectedStudent.studentDocId) {
         const newRubricGradesLocation = [
@@ -174,7 +219,8 @@ export function Rubric() {
 
         const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
             const line = rubric.rubricLines[grade.categoryIndex];
-            if (line && line.possibleScores[grade.gradingIndex]) {
+            // Também verificar aqui se a linha é avaliável ao calcular currentGrade
+            if (line && line.possibleScores[grade.gradingIndex] && gradableLineIds.includes(line.lineId)) {
                 return total + line.possibleScores[grade.gradingIndex].score;
             }
             return total;
@@ -291,6 +337,7 @@ export function Rubric() {
           onRemoveCategory={handleRemoveCategory}
           onGradeSelect={handleGradeSelect}
           onRubricLineChange={handleRubricLineChange}
+          gradableLineIds={gradableLineIds}
         />
       </div>
       
