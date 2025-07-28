@@ -31,6 +31,7 @@ export interface IStudentRubricGrade{
 }
 
 export interface IRubric{
+    id?: string; // Adicione um ID opcional para o documento Firestore
     teacherDocId: String,
     studentRubricGrade: IStudentRubricGrade[],
     rubricLines: IRubricLine[],

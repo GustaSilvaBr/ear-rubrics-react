@@ -1,6 +1,8 @@
 // src/pages/Rubric/index.tsx
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { doc, getDoc, setDoc, deleteDoc, collection } from "firebase/firestore";
+import { useFirebase } from "../../context/FirebaseContext"; // Import the FirebaseContext hook
 import type { IRubric, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
 import type { IStudent } from "../../interfaces/IStudent";
 import { RubricTable } from "./RubricTable";
@@ -25,6 +27,9 @@ const OptionsIcon = () => (
 
 export function Rubric() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { db, userId, isAuthReady } = useFirebase(); // Get db, userId, and isAuthReady from context
+
   const [rubric, setRubric] = useState<IRubric | null>(null);
   const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<IStudent | null>(null);
@@ -32,7 +37,10 @@ export function Rubric() {
   const [originalRubric, setOriginalRubric] = useState<IRubric | null>(null);
   const [maxGrade, setMaxGrade] = useState(0);
   const [gradableLineIds, setGradableLineIds] = useState<String[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Effect to calculate maxGrade and gradableLineIds
   useEffect(() => {
     if (!rubric) return;
 
@@ -53,33 +61,64 @@ export function Rubric() {
     setGradableLineIds(tempValidLines.map(line => line.lineId));
   }, [rubric?.rubricLines]);
 
-
   const generateLineId = () => {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };
 
+  // Function to initialize a new rubric
+  const initializeNewRubric = useCallback((currentUserId: string) => {
+    const newRubric: IRubric = {
+      teacherDocId: currentUserId, // Associate with the authenticated userId
+      studentRubricGrade: [],
+      header: {
+        title: "Oral Project - Class debate",
+        gradeLevels: [],
+      },
+      rubricLines: [
+        { lineId: generateLineId(), categoryName: "Respect for other Team", possibleScores: [ { score: 25, text: "All statements, body language, and responses were respectful and were in appropriate language." }, { score: 20, text: "Statements and responses were respectful and used appropriate language, but once or twice body language was not." }, { score: 15, text: "Most statements and responses were respectful and in appropriate language, but there was one sarcastic remark." }, { score: 10, text: "Statements, responses and/or body language were consistently not respectful." }] },
+        { lineId: generateLineId(), categoryName: "Information", possibleScores: [ { score: 25, text: "All information presented in the debate was clear, accurate and thorough." }, { score: 20, text: "Most information presented in the debate was clear, accurate and thorough." }, { score: 15, text: "Most information presented in the debate was clear and accurate, but was not usually thorough." }, { score: 10, text: "Information had several inaccuracies OR was usually not clear." }] },
+        { lineId: generateLineId(), categoryName: "Rebuttal", possibleScores: [ { score: 25, text: "All counter-arguments were accurate, relevant and strong." }, { score: 20, text: "Most counter-arguments were accurate, relevant, and strong." }, { score: 15, text: "Most counter-arguments were accurate and relevant, but several were weak." }, { score: 10, text: "Counter-arguments were not accurate and/or relevant" }] },
+        { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] }
+      ],
+    };
+    setRubric(newRubric);
+    setLoading(false);
+  }, []);
+
+  // Effect to load the rubric from Firestore or initialize a new one
   useEffect(() => {
-    const rubricId = searchParams.get("id");
-    if (rubricId) {
-      // Logic for fetching an existing rubric would go here
-    } else {
-      const newRubric: IRubric = {
-        teacherDocId: "",
-        studentRubricGrade: [],
-        header: {
-          title: "Oral Project - Class debate",
-          gradeLevels: [],
-        },
-        rubricLines: [
-          { lineId: generateLineId(), categoryName: "Respect for other Team", possibleScores: [ { score: 25, text: "All statements, body language, and responses were respectful and were in appropriate language." }, { score: 20, text: "Statements and responses were respectful and used appropriate language, but once or twice body language was not." }, { score: 15, text: "Most statements and responses were respectful and in appropriate language, but there was one sarcastic remark." }, { score: 10, text: "Statements, responses and/or body language were consistently not respectful." }] },
-          { lineId: generateLineId(), categoryName: "Information", possibleScores: [ { score: 25, text: "All information presented in the debate was clear, accurate and thorough." }, { score: 20, text: "Most information presented in the debate was clear, accurate and thorough." }, { score: 15, text: "Most information presented in the debate was clear and accurate, but was not usually thorough." }, { score: 10, text: "Information had several inaccuracies OR was usually not clear." }] },
-          { lineId: generateLineId(), categoryName: "Rebuttal", possibleScores: [ { score: 25, text: "All counter-arguments were accurate, relevant and strong." }, { score: 20, text: "Most counter-arguments were accurate, relevant, and strong." }, { score: 15, text: "Most counter-arguments were accurate and relevant, but several were weak." }, { score: 10, text: "Counter-arguments were not accurate and/or relevant" }] },
-          { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] }
-        ],
-      };
-      setRubric(newRubric);
+    if (!isAuthReady || !db || !userId) {
+      return; // Wait for Firebase to be ready
     }
-  }, [searchParams]);
+
+    const rubricId = searchParams.get("id");
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubricId || "new");
+
+    if (rubricId) {
+      // Load existing rubric
+      const fetchRubric = async () => {
+        try {
+          const docSnap = await getDoc(rubricDocRef);
+          if (docSnap.exists()) {
+            setRubric({ id: docSnap.id, ...docSnap.data() } as IRubric);
+            setLoading(false);
+          } else {
+            console.warn("No such document! Initializing new rubric.");
+            initializeNewRubric(userId);
+          }
+        } catch (err) {
+          console.error("Error fetching rubric:", err);
+          setError("Failed to load rubric. Please try again.");
+          setLoading(false);
+        }
+      };
+      fetchRubric();
+    } else {
+      // Initialize new rubric
+      initializeNewRubric(userId);
+    }
+  }, [searchParams, db, userId, isAuthReady, initializeNewRubric]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!rubric) return;
@@ -204,10 +243,10 @@ export function Rubric() {
       return;
     }
 
-    // Verificar se a linha selecionada é avaliável antes de prosseguir
+    // Check if the selected line is gradable before proceeding
     const selectedLineId = rubric.rubricLines[categoryIndex]?.lineId;
     if (!gradableLineIds.includes(selectedLineId)) {
-        return; // Não faça nada se a linha não for avaliável
+        return; // Do nothing if the line is not gradable
     }
 
     const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
@@ -219,7 +258,7 @@ export function Rubric() {
 
         const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
             const line = rubric.rubricLines[grade.categoryIndex];
-            // Também verificar aqui se a linha é avaliável ao calcular currentGrade
+            // Also check here if the line is gradable when calculating currentGrade
             if (line && line.possibleScores[grade.gradingIndex] && gradableLineIds.includes(line.lineId)) {
                 return total + line.possibleScores[grade.gradingIndex].score;
             }
@@ -242,10 +281,58 @@ export function Rubric() {
     setEditionMode(true);
   };
 
-  const handleSaveChanges = () => {
-    setEditionMode(false);
-    setOriginalRubric(null);
-    alert("Changes saved!");
+  const handleSaveChanges = async () => {
+    if (!db || !userId || !rubric) return;
+
+    setLoading(true);
+    setError(null);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    try {
+      if (rubric.id) {
+        // Update existing rubric
+        const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubric.id);
+        await setDoc(rubricDocRef, { ...rubric, id: undefined }); // Remove 'id' before saving
+        alert("Rubric updated successfully!");
+      } else {
+        // Create new rubric
+        const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
+        const newDocRef = doc(rubricsCollectionRef); // Generate a new document ID
+        await setDoc(newDocRef, { ...rubric, id: newDocRef.id }); // Save with the generated ID
+        setRubric(prev => prev ? { ...prev, id: newDocRef.id } : null); // Update state with the new ID
+        navigate(`/rubric?id=${newDocRef.id}`); // Redirect to the URL with the new ID
+        alert("Rubric created successfully!");
+      }
+      setEditionMode(false);
+      setOriginalRubric(null);
+    } catch (e) {
+      console.error("Error saving rubric: ", e);
+      setError("Failed to save rubric. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!db || !userId || !rubric || !rubric.id) return;
+
+    if (window.confirm("Are you sure you want to delete this rubric?")) {
+      setLoading(true);
+      setError(null);
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+      try {
+        const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubric.id);
+        await deleteDoc(rubricDocRef);
+        alert("Rubric deleted successfully!");
+        navigate("/"); // Redirect to home page after deletion
+      } catch (e) {
+        console.error("Error deleting rubric: ", e);
+        setError("Failed to delete rubric. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleCancel = () => {
@@ -257,14 +344,17 @@ export function Rubric() {
   };
 
   const handleShare = () => alert("Share action!");
-  const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this rubric?")) {
-        alert("Delete action confirmed!");
-    }
-  };
+
+  if (loading) {
+    return <div className={styles.rubricPage}>Loading rubric...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.rubricPage} style={{ color: 'red' }}>{error}</div>;
+  }
 
   if (!rubric) {
-    return <div>Loading...</div>;
+    return <div className={styles.rubricPage}>No rubric data available.</div>;
   }
 
   const selectedStudentGrades = rubric.studentRubricGrade.find(
