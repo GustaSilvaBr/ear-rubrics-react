@@ -1,13 +1,13 @@
 // src/auth.ts
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, type User } from "firebase/auth";
-import { app } from "./context/FirebaseContext"; // Importe a instância do app Firebase se for inicializada globalmente, ou remova se for via contexto
+import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, type User, type Auth } from "firebase/auth";
+// Removido: import { app } from "./context/FirebaseContext"; // Não importamos mais o app aqui
 
 // Domínio permitido para autenticação
 const ALLOWED_DOMAIN = "ear.com.br";
 
 // Função para fazer login com o Google
-export async function signInWithGoogle(): Promise<User | null> {
-  const auth = getAuth(); // Obtenha a instância de Auth do Firebase
+// Agora aceita a instância 'auth' como parâmetro
+export async function signInWithGoogle(auth: Auth): Promise<User | null> {
   const provider = new GoogleAuthProvider();
 
   try {
@@ -37,8 +37,8 @@ export async function signInWithGoogle(): Promise<User | null> {
 }
 
 // Função para fazer logout
-export async function signOut(): Promise<void> {
-  const auth = getAuth(); // Obtenha a instância de Auth do Firebase
+// Agora aceita a instância 'auth' como parâmetro
+export async function signOut(auth: Auth): Promise<void> {
   try {
     await firebaseSignOut(auth);
     console.log("User signed out successfully.");
@@ -47,6 +47,3 @@ export async function signOut(): Promise<void> {
     throw new Error(`Logout failed: ${error.message || "Unknown error"}`);
   }
 }
-
-// Nota: A persistência do estado de autenticação é gerenciada automaticamente pelo Firebase Auth.
-// Não é necessário usar localStorage.isAuthenticated como antes.

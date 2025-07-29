@@ -1,0 +1,75 @@
+// src/pages/Login/Login.module.scss
+@import "../../styles/variables";
+
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: $background-color;
+}
+
+.loginBox {
+  background-color: #ffffff;
+  padding: $spacing-lg * 2; // Increased padding for a more substantial box
+  border-radius: $border-radius * 2; // Slightly more rounded corners
+  box-shadow: $box-shadow;
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.appTitle {
+  font-size: $font-size-title * 1.2; // Larger title
+  color: $primary-color;
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-md;
+}
+
+.googleSignInButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background-color: #4285F4; // Google blue
+  color: #ffffff;
+  border: none;
+  border-radius: $border-radius;
+  font-size: $font-size-large;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // Subtle shadow for depth
+
+  &:hover {
+    background-color: darken(#4285F4, 10%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  .googleIcon {
+    // Simple SVG for Google icon, or you can use a font icon if available
+    width: 24px;
+    height: 24px;
+    background-color: #ffffff;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+  }
+}
+
+.errorMessage {
+  color: $error-color;
+  font-size: $font-size-base;
+  margin-top: $spacing-sm;
+}

@@ -1,6 +1,7 @@
 // src/components/Layout/index.tsx
 import { Outlet, useNavigate, Link } from "react-router-dom";
-import { auth } from "../../auth";
+import { signOut } from "../../auth"; // Importe a função signOut
+import { useFirebase } from "../../context/FirebaseContext";
 import styles from "./Layout.module.scss";
 
 // A simple book icon for the application brand
@@ -23,11 +24,20 @@ const AppIcon = () => (
 
 export function Layout() {
   const navigate = useNavigate();
+  const { auth, isAuthReady } = useFirebase(); // Obtenha auth e isAuthReady do contexto
 
-  const handleSignOut = () => {
-    auth.signout(() => {
+  const handleSignOut = async () => {
+    if (!auth) { // Garante que a instância auth está disponível
+      console.error("Firebase Auth not initialized.");
+      return;
+    }
+    try {
+      await signOut(auth); // <--- AQUI: Passa a instância 'auth'
       navigate("/login");
-    });
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      // Você pode adicionar um tratamento de erro na UI aqui, se necessário
+    }
   };
 
   return (
@@ -37,9 +47,11 @@ export function Layout() {
           <AppIcon />
           <span>EAR Rubrics</span>
         </Link>
-        <button onClick={handleSignOut} className={styles.signOutButton}>
-          Sign Out
-        </button>
+        {isAuthReady && auth?.currentUser && ( // Mostra o botão de logout apenas se houver um usuário logado e auth estiver pronto
+          <button onClick={handleSignOut} className={styles.signOutButton}>
+            Sign Out
+          </button>
+        )}
       </nav>
       <main className={styles.content}>
         <Outlet />

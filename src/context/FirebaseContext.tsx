@@ -1,9 +1,12 @@
-// src/context/FirebaseContext.tsx
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, type Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
+// Variável para armazenar a instância do Firebase App
+export let app: FirebaseApp; // Exporta a instância do app Firebase
+
+// Define a interface para o contexto do Firebase
 interface FirebaseContextType {
   db: Firestore | null;
   auth: Auth | null;
@@ -11,6 +14,7 @@ interface FirebaseContextType {
   isAuthReady: boolean;
 }
 
+// Crie o contexto com valores iniciais nulos
 const FirebaseContext = createContext<FirebaseContextType>({
   db: null,
   auth: null,
@@ -18,8 +22,10 @@ const FirebaseContext = createContext<FirebaseContextType>({
   isAuthReady: false,
 });
 
+// Hook customizado para usar o contexto do Firebase
 export const useFirebase = () => useContext(FirebaseContext);
 
+// Provedor do Firebase
 interface FirebaseProviderProps {
   children: ReactNode;
 }
@@ -32,57 +38,43 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [error, setError] = useState<string | null>(null); // Adicionado estado de erro local
 
   useEffect(() => {
-    let app: FirebaseApp;
     let firestore: Firestore;
     let firebaseAuth: Auth;
 
     try {
-      // Tenta ler as variáveis globais do Canvas primeiro
-      let configFromCanvas = {};
-      let appIdFromCanvas = 'default-app-id';
-      let initialAuthTokenFromCanvas: string | null = null;
-
-      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-        configFromCanvas = JSON.parse(__firebase_config);
-      }
-      if (typeof __app_id !== 'undefined') {
-        appIdFromCanvas = __app_id;
-      }
-      if (typeof __initial_auth_token !== 'undefined') {
-        initialAuthTokenFromCanvas = __initial_auth_token;
-      }
+      const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : {};
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
       // Use as variáveis de ambiente do Vite para o ambiente local
-      const firebaseConfig = {
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-        appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+      const localFirebaseConfig = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfig.appId,
+        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || firebaseConfig.measurementId,
       };
 
-      const appId = import.meta.env.VITE_APP_ID || appIdFromCanvas; // Você pode definir VITE_APP_ID no .env também
-      const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN || initialAuthTokenFromCanvas; // Se você tiver um token para testes locais
+      const localAppId = import.meta.env.VITE_APP_ID || appId;
+      const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN || (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null);
 
-      // Verifica se o projectId está presente na configuração do Firebase
-      if (!firebaseConfig.projectId) {
+      if (!localFirebaseConfig.projectId) {
         console.error("Firebase Initialization Error: 'projectId' not found in firebase configuration. Please ensure it's provided via Canvas global variables or .env file.");
         setError("Firebase configuration missing projectId. Cannot connect to database.");
         setIsAuthReady(true);
-        setUserId(crypto.randomUUID()); // Fallback para um ID de usuário aleatório
-        return; // Sai da função se a configuração for inválida
+        setUserId(crypto.randomUUID());
+        return;
       }
 
-      // Inicializa o Firebase App
-      app = initializeApp(firebaseConfig, appId);
+      // Inicializa o Firebase App e atribui à variável exportada
+      app = initializeApp(localFirebaseConfig, localAppId);
       firestore = getFirestore(app);
-      firebaseAuth = getAuth(app);
+      firebaseAuth = getAuth(app); // Passa a instância do app explicitamente
 
       setDb(firestore);
       setAuth(firebaseAuth);
 
-      // Listener para mudanças no estado de autenticação
       const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
           setUserId(user.uid);
