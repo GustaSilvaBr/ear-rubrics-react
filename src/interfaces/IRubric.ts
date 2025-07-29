@@ -32,9 +32,10 @@ export interface IStudentRubricGrade{
 
 export interface IRubric{
     id?: string; // Adicione um ID opcional para o documento Firestore
-    teacherDocId: String,
-    studentRubricGrade: IStudentRubricGrade[],
-    rubricLines: IRubricLine[],
+    teacherEmail: String; // Substituído teacherDocId por teacherEmail
+    teacherName: String; // Novo campo para o nome do professor
+    studentRubricGrade: IStudentRubricGrade[];
+    rubricLines: IRubricLine[];
     header:{
         title: String,
         gradeLevels:String[],

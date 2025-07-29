@@ -1,0 +1,104 @@
+// src/pages/Admin/Admin.module.scss
+@import "../../styles/variables";
+
+.adminContainer {
+  padding: $spacing-lg;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+}
+
+.title {
+  font-size: $font-size-title;
+  color: $primary-color;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+}
+
+.importSection, .studentListSection {
+  background-color: lighten($secondary-color, 3%);
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-lg;
+  border: 1px solid $border-color;
+
+  h2 {
+    font-size: $font-size-large;
+    color: $text-color;
+    margin-bottom: $spacing-md;
+    border-bottom: 1px solid $border-color;
+    padding-bottom: $spacing-xs;
+  }
+}
+
+.fileInput {
+  display: block;
+  width: 100%;
+  padding: $spacing-sm;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+  background-color: #fff;
+}
+
+.importButton {
+  padding: $spacing-sm $spacing-md;
+  background-color: $success-color;
+  color: #fff;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: darken($success-color, 10%);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    background-color: lighten($success-color, 20%);
+    cursor: not-allowed;
+  }
+}
+
+.importMessage, .errorMessage {
+  margin-top: $spacing-sm;
+  font-size: $font-size-base;
+}
+
+.importMessage {
+  color: $text-color;
+}
+
+.errorMessage {
+  color: $error-color;
+}
+
+.studentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px; // Limita a altura para rolagem
+  overflow-y: auto; // Adiciona rolagem vertical
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  background-color: #fff;
+}
+
+.studentItem {
+  padding: $spacing-sm $spacing-md;
+  border-bottom: 1px solid lighten($border-color, 5%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: $font-size-base;
+  color: $text-color;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}

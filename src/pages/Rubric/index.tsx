@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, deleteDoc, collection } from "firebase/firestore";
-import { useFirebase } from "../../context/FirebaseContext"; // Import the FirebaseContext hook
+import { useFirebase } from "../../context/FirebaseContext";
 import type { IRubric, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
 import type { IStudent } from "../../interfaces/IStudent";
 import { RubricTable } from "./RubricTable";
@@ -28,7 +28,7 @@ const OptionsIcon = () => (
 export function Rubric() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { db, userId, isAuthReady } = useFirebase(); // Get db, userId, and isAuthReady from context
+  const { db, userId, teacherEmail, teacherName, isAuthReady } = useFirebase();
 
   const [rubric, setRubric] = useState<IRubric | null>(null);
   const [assignedStudents, setAssignedStudents] = useState<IStudent[]>([]);
@@ -65,19 +65,17 @@ export function Rubric() {
     return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
   };
 
-  // Function to initialize a new rubric
-  const initializeNewRubric = useCallback((currentUserId: string) => {
+  // Função para inicializar uma nova rubrica (agora sem o isNewRubricFlag para linhas pré-preenchidas)
+  const initializeNewRubric = useCallback((currentTeacherEmail: string | null, currentTeacherName: string | null) => {
     const newRubric: IRubric = {
-      teacherDocId: currentUserId, // Associate with the authenticated userId
+      teacherEmail: currentTeacherEmail || "unknown",
+      teacherName: currentTeacherName || "Unknown Teacher",
       studentRubricGrade: [],
       header: {
-        title: "Oral Project - Class debate",
+        title: "Untitled Rubric", // Título padrão em inglês
         gradeLevels: [],
       },
-      rubricLines: [
-        { lineId: generateLineId(), categoryName: "Respect for other Team", possibleScores: [ { score: 25, text: "All statements, body language, and responses were respectful and were in appropriate language." }, { score: 20, text: "Statements and responses were respectful and used appropriate language, but once or twice body language was not." }, { score: 15, text: "Most statements and responses were respectful and in appropriate language, but there was one sarcastic remark." }, { score: 10, text: "Statements, responses and/or body language were consistently not respectful." }] },
-        { lineId: generateLineId(), categoryName: "Information", possibleScores: [ { score: 25, text: "All information presented in the debate was clear, accurate and thorough." }, { score: 20, text: "Most information presented in the debate was clear, accurate and thorough." }, { score: 15, text: "Most information presented in the debate was clear and accurate, but was not usually thorough." }, { score: 10, text: "Information had several inaccuracies OR was usually not clear." }] },
-        { lineId: generateLineId(), categoryName: "Rebuttal", possibleScores: [ { score: 25, text: "All counter-arguments were accurate, relevant and strong." }, { score: 20, text: "Most counter-arguments were accurate, relevant, and strong." }, { score: 15, text: "Most counter-arguments were accurate and relevant, but several were weak." }, { score: 10, text: "Counter-arguments were not accurate and/or relevant" }] },
+      rubricLines: [ // Sempre inicia com uma linha em branco se não vier do DB
         { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] }
       ],
     };
@@ -85,27 +83,31 @@ export function Rubric() {
     setLoading(false);
   }, []);
 
-  // Effect to load the rubric from Firestore or initialize a new one
+  // Efeito para carregar a rubrica do Firestore ou inicializar uma nova
   useEffect(() => {
     if (!isAuthReady || !db || !userId) {
-      return; // Wait for Firebase to be ready
+      return; // Espera o Firebase estar pronto
     }
 
     const rubricId = searchParams.get("id");
+    const isNewParam = searchParams.get("isNew"); // Captura o parâmetro isNew
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubricId || "new");
 
     if (rubricId) {
-      // Load existing rubric
+      // Carregar rubrica existente
       const fetchRubric = async () => {
         try {
           const docSnap = await getDoc(rubricDocRef);
           if (docSnap.exists()) {
             setRubric({ id: docSnap.id, ...docSnap.data() } as IRubric);
+            // Define o modo de edição com base no parâmetro isNew
+            setEditionMode(isNewParam === "true"); // Abre em edição se isNew for 'true'
             setLoading(false);
           } else {
             console.warn("No such document! Initializing new rubric.");
-            initializeNewRubric(userId);
+            initializeNewRubric(teacherEmail, teacherName); // Se não encontrar, inicializa como nova
+            setEditionMode(true); 
           }
         } catch (err) {
           console.error("Error fetching rubric:", err);
@@ -115,10 +117,11 @@ export function Rubric() {
       };
       fetchRubric();
     } else {
-      // Initialize new rubric
-      initializeNewRubric(userId);
+      // Inicializar nova rubrica (se não há ID na URL)
+      initializeNewRubric(teacherEmail, teacherName); // Abre em modo de edição para novas rubricas sem ID
+      setEditionMode(true); 
     }
-  }, [searchParams, db, userId, isAuthReady, initializeNewRubric]);
+  }, [searchParams, db, userId, teacherEmail, teacherName, isAuthReady, initializeNewRubric]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!rubric) return;
@@ -211,9 +214,17 @@ export function Rubric() {
   
   const handleAssignStudent = (student: IStudent) => {
     if (!rubric || assignedStudents.find(s => s.studentDocId === student.studentDocId)) return;
+    
+    // Adicionado verificação para student.studentDocId
+    if (!student.studentDocId) {
+        console.error("Attempted to assign student without studentDocId:", student);
+        setError("Cannot assign student: Missing student ID.");
+        return;
+    }
+
     setAssignedStudents([...assignedStudents, student]);
     const newStudentGrade: IStudentRubricGrade = {
-      studentDocId: student.studentDocId,
+      studentDocId: student.studentDocId, // Agora studentDocId é garantido como String
       rubricGradesLocation: [],
       currentGrade: 0,
     };
@@ -282,25 +293,34 @@ export function Rubric() {
   };
 
   const handleSaveChanges = async () => {
-    if (!db || !userId || !rubric) return;
+    if (!db || !userId || !rubric || !teacherEmail || !teacherName) {
+      setError("User information (email/name) not available. Please try logging in again.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     try {
+      const { id, ...restOfRubric } = rubric; 
+
+      const rubricToSave = {
+        ...restOfRubric,
+        teacherEmail: teacherEmail,
+        teacherName: teacherName,
+      };
+
       if (rubric.id) {
-        // Update existing rubric
         const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubric.id);
-        await setDoc(rubricDocRef, { ...rubric, id: undefined }); // Remove 'id' before saving
+        await setDoc(rubricDocRef, rubricToSave);
         alert("Rubric updated successfully!");
       } else {
-        // Create new rubric
         const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
-        const newDocRef = doc(rubricsCollectionRef); // Generate a new document ID
-        await setDoc(newDocRef, { ...rubric, id: newDocRef.id }); // Save with the generated ID
-        setRubric(prev => prev ? { ...prev, id: newDocRef.id } : null); // Update state with the new ID
-        navigate(`/rubric?id=${newDocRef.id}`); // Redirect to the URL with the new ID
+        const newDocRef = doc(rubricsCollectionRef);
+        await setDoc(newDocRef, { ...rubricToSave, id: newDocRef.id });
+        setRubric(prev => prev ? { ...prev, id: newDocRef.id } : null);
+        navigate(`/rubric?id=${newDocRef.id}`);
         alert("Rubric created successfully!");
       }
       setEditionMode(false);
@@ -325,7 +345,7 @@ export function Rubric() {
         const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubric.id);
         await deleteDoc(rubricDocRef);
         alert("Rubric deleted successfully!");
-        navigate("/"); // Redirect to home page after deletion
+        navigate("/");
       } catch (e) {
         console.error("Error deleting rubric: ", e);
         setError("Failed to delete rubric. Please try again.");

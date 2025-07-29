@@ -4,7 +4,7 @@ import type { IStudent } from "../../../../interfaces/IStudent";
 import styles from "./StudentAutocomplete.module.scss";
 
 interface StudentAutocompleteProps {
-  allStudents: IStudent[];
+  allStudents: IStudent[]; // Agora recebe a lista completa do Firestore
   onStudentSelect: (student: IStudent) => void;
 }
 
@@ -41,11 +41,11 @@ export function StudentAutocomplete({
         <ul className={styles.dropdown}>
           {filteredStudents.map((student) => (
             <li
-              key={String(student.studentDocId)}
+              key={String(student.studentDocId)} // Usa studentDocId como key
               onClick={() => handleSelect(student)}
               className={styles.dropdownItem}
             >
-              {student.name}
+              {String(student.name)}
             </li>
           ))}
         </ul>

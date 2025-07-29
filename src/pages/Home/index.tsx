@@ -1,11 +1,11 @@
 // src/pages/Home/index.tsx
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { collection, query, onSnapshot, addDoc } from "firebase/firestore"; // Importe addDoc
+import { collection, query, onSnapshot, addDoc, doc } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
-import type { IRubric } from "../../interfaces/IRubric";
-import type { ITeacher } from "../../interfaces/ITeacher"; // Importe ITeacher
-import type { IStudent } from "../../interfaces/IStudent"; // Importe IStudent
+import type { IRubric, IRubricLine } from "../../interfaces/IRubric"; // Import IRubricLine
+import type { ITeacher } from "../../interfaces/ITeacher";
+import type { IStudent } from "../../interfaces/IStudent";
 import styles from "./Home.module.scss";
 
 // Interface para a listagem simplificada da rubrica na Home
@@ -16,7 +16,8 @@ interface IRubricListing {
 }
 
 export function Home() {
-  const { db, userId, isAuthReady } = useFirebase();
+  const navigate = useNavigate();
+  const { db, userId, teacherEmail, teacherName, isAuthReady } = useFirebase();
   const [rubrics, setRubrics] = useState<IRubricListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +57,15 @@ export function Home() {
     return () => unsubscribe();
   }, [db, userId, isAuthReady]);
 
-  // Função para criar dados fake no banco de dados
-  const createFakeData = async () => {
-    if (!db || !userId) {
-      alert("Firebase is not initialized or user is not authenticated.");
+  // Helper para gerar IDs de linha
+  const generateLineId = () => {
+    return `${Date.now()} - ${Math.floor(Math.random() * 1000) + 1}`;
+  };
+
+  // Função para criar uma nova rubrica no Firestore e redirecionar
+  const handleCreateNewRubric = async () => {
+    if (!db || !userId || !teacherEmail || !teacherName) {
+      alert("User information (email/name) not available. Please try logging in again.");
       return;
     }
 
@@ -68,19 +74,62 @@ export function Home() {
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     try {
-      // 1. Criar um Teacher
+      const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
+      
+      // Linhas de exemplo pré-preenchidas para a nova rubrica
+      const prefilledRubricLines: IRubricLine[] = [
+        { lineId: generateLineId(), categoryName: "Respect for other Team", possibleScores: [ { score: 25, text: "All statements, body language, and responses were respectful and were in appropriate language." }, { score: 20, text: "Statements and responses were respectful and used appropriate language, but once or twice body language was not." }, { score: 15, text: "Most statements and responses were respectful and in appropriate language, but there was one sarcastic remark." }, { score: 10, text: "Statements, responses and/or body language were consistently not respectful." }] },
+        { lineId: generateLineId(), categoryName: "Information", possibleScores: [ { score: 25, text: "All information presented in the debate was clear, accurate and thorough." }, { score: 20, text: "Most information presented in the debate was clear, accurate and thorough." }, { score: 15, text: "Most information presented in the debate was clear and accurate, but was not usually thorough." }, { score: 10, text: "Information had several inaccuracies OR was usually not clear." }] },
+        { lineId: generateLineId(), categoryName: "Rebuttal", possibleScores: [ { score: 25, text: "All counter-arguments were accurate, relevant and strong." }, { score: 20, text: "Most counter-arguments were accurate, relevant, and strong." }, { score: 15, text: "Most counter-arguments were accurate and relevant, but several were weak." }, { score: 10, text: "Counter-arguments were not accurate and/or relevant" }] },
+        { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] } // Quarta linha em branco
+      ];
+
+      // Criar um objeto de rubrica com valores padrão e as linhas pré-preenchidas
+      const newRubricData: Omit<IRubric, 'id'> = {
+        teacherEmail: teacherEmail,
+        teacherName: teacherName,
+        studentRubricGrade: [],
+        rubricLines: prefilledRubricLines, // Usa as linhas pré-preenchidas
+        header: {
+          title: "Untitled Rubric", // Título padrão em inglês
+          gradeLevels: [],
+        },
+      };
+
+      const docRef = await addDoc(rubricsCollectionRef, newRubricData); // Adiciona a rubrica ao Firestore
+      // Redireciona para a página da rubrica com o novo ID e o parâmetro isNew=true
+      navigate(`/rubric?id=${docRef.id}&isNew=true`);
+    } catch (e) {
+      console.error("Error creating new rubric: ", e);
+      setError("Failed to create new rubric. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Função para criar dados fake no banco de dados (mantida para testes)
+  const createFakeData = async () => {
+    if (!db || !userId || !teacherEmail || !teacherName) {
+      alert("Firebase is not initialized or user information (email/name) not available.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    try {
       const teachersCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/teachers`);
-      const teacherData: Omit<ITeacher, 'teacherDocId'> = { // Omitir teacherDocId, pois addDoc irá gerá-lo
-        name: "Gustavo Silva",
-        email: "gustavo.silva@ear.com.br",
+      const teacherData: Omit<ITeacher, 'teacherDocId'> = {
+        name: teacherName,
+        email: teacherEmail,
       };
       const teacherDocRef = await addDoc(teachersCollectionRef, teacherData);
       const teacherDocId = teacherDocRef.id;
-      console.log("Teacher created with ID:", teacherDocId);
+      console.log("Fake Teacher created with ID:", teacherDocId);
 
-      // 2. Criar um Student
       const studentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/students`);
-      const studentData: Omit<IStudent, 'studentDocId'> = { // Omitir studentDocId
+      const studentData: Omit<IStudent, 'studentDocId'> = {
         name: "John Doe",
         studentId: "1020/1",
         email: "john.doe@ear.com.br",
@@ -88,15 +137,15 @@ export function Home() {
       };
       const studentDocRef = await addDoc(studentsCollectionRef, studentData);
       const studentDocId = studentDocRef.id;
-      console.log("Student created with ID:", studentDocId);
+      console.log("Fake Student created with ID:", studentDocId);
 
-      // 3. Criar uma Rubric
       const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
-      const rubricData: Omit<IRubric, 'id'> = { // Omitir id, pois addDoc irá gerá-lo
-        teacherDocId: teacherDocId, // Usar o ID do professor recém-criado
+      const rubricData: Omit<IRubric, 'id'> = {
+        teacherEmail: teacherEmail,
+        teacherName: teacherName,
         studentRubricGrade: [
           {
-            studentDocId: studentDocId, // Usar o ID do estudante recém-criado
+            studentDocId: studentDocId,
             rubricGradesLocation: [],
             currentGrade: 0,
           }
@@ -111,7 +160,7 @@ export function Home() {
         },
       };
       await addDoc(rubricsCollectionRef, rubricData);
-      console.log("Rubric created successfully!");
+      console.log("Fake Rubric created successfully!");
 
       alert("Fake data created successfully!");
     } catch (e) {
@@ -137,10 +186,10 @@ export function Home() {
         Create Fake Data
       </button>
       <div className={styles.rubricGrid}>
-        {/* Card para Adicionar Nova Rúbrica */}
-        <Link to="/rubric" className={styles.addRubricCard}>
+        {/* Card para Adicionar Nova Rúbrica - AGORA CRIA E REDIRECIONA */}
+        <div className={styles.addRubricCard} onClick={handleCreateNewRubric}>
           <span className={styles.plusIcon}>+</span>
-        </Link>
+        </div>
 
         {/* Cards de Rúbricas Existentes */}
         {rubrics.map((rubric) => (

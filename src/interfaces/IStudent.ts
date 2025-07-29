@@ -1,7 +1,7 @@
 export interface IStudent {
-    name: String,
-    studentId:String,
-    studentDocId?: String,
-    email:String,
-    gradeLevel: String,
+    name: string,
+    studentId:string,
+    studentDocId?: string,
+    email:string,
+    gradeLevel: string,
 }

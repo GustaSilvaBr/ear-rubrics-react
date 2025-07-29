@@ -10,6 +10,7 @@ import { Rubric } from "./pages/Rubric";
 import { Layout } from "./components/Layout";
 import { useFirebase } from "./context/FirebaseContext"; // Importe o hook useFirebase
 import type { JSX } from "react";
+import { Admin } from "./pages/Admin";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { auth, isAuthReady } = useFirebase(); // Obtenha auth e isAuthReady do contexto
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: "/rubric",
         element: <Rubric />,
+      },
+      {
+        path: "/admin",
+        element: <Admin />,
       },
     ],
   },

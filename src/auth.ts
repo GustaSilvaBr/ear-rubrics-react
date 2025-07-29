@@ -1,6 +1,5 @@
 // src/auth.ts
 import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, type User, type Auth } from "firebase/auth";
-// Removido: import { app } from "./context/FirebaseContext"; // Não importamos mais o app aqui
 
 // Domínio permitido para autenticação
 const ALLOWED_DOMAIN = "ear.com.br";
@@ -9,6 +8,12 @@ const ALLOWED_DOMAIN = "ear.com.br";
 // Agora aceita a instância 'auth' como parâmetro
 export async function signInWithGoogle(auth: Auth): Promise<User | null> {
   const provider = new GoogleAuthProvider();
+
+  // Define um parâmetro personalizado para forçar a seleção da conta
+  // Mesmo que apenas uma conta esteja logada no navegador, o seletor será exibido.
+  provider.setCustomParameters({
+    prompt: 'select_account' // This parameter forces the account selection dialog
+  });
 
   try {
     const result = await signInWithPopup(auth, provider);

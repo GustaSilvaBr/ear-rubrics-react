@@ -11,6 +11,8 @@ interface FirebaseContextType {
   db: Firestore | null;
   auth: Auth | null;
   userId: string | null;
+  teacherEmail: string | null; // Adicionado teacherEmail ao contexto
+  teacherName: string | null;  // Adicionado teacherName ao contexto
   isAuthReady: boolean;
 }
 
@@ -19,6 +21,8 @@ const FirebaseContext = createContext<FirebaseContextType>({
   db: null,
   auth: null,
   userId: null,
+  teacherEmail: null, // Valor inicial
+  teacherName: null,  // Valor inicial
   isAuthReady: false,
 });
 
@@ -34,6 +38,8 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [auth, setAuth] = useState<Auth | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [teacherEmail, setTeacherEmail] = useState<string | null>(null); // Estado para teacherEmail
+  const [teacherName, setTeacherName] = useState<string | null>(null);    // Estado para teacherName
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null); // Adicionado estado de erro local
 
@@ -78,18 +84,30 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
           setUserId(user.uid);
+          setTeacherEmail(user.email);       // Salva o email do usuário
+          setTeacherName(user.displayName); // Salva o nome de exibição do usuário
         } else {
+          setUserId(null); // Limpa o userId se não houver usuário
+          setTeacherEmail(null); // Limpa o email
+          setTeacherName(null);  // Limpa o nome
           try {
             if (initialAuthToken) {
               const userCredential = await signInWithCustomToken(firebaseAuth, initialAuthToken);
               setUserId(userCredential.user.uid);
+              setTeacherEmail(userCredential.user.email);
+              setTeacherName(userCredential.user.displayName);
             } else {
               const userCredential = await signInAnonymously(firebaseAuth);
               setUserId(userCredential.user.uid);
+              // Usuários anônimos geralmente não têm email/displayName, mas podemos definir como null
+              setTeacherEmail(null);
+              setTeacherName("Anonymous User"); // Nome padrão para anônimos
             }
           } catch (authError) {
             console.error("Firebase authentication error:", authError);
-            setUserId(crypto.randomUUID());
+            setUserId(crypto.randomUUID()); // Fallback para ID aleatório em caso de erro
+            setTeacherEmail(null);
+            setTeacherName(null);
           }
         }
         setIsAuthReady(true);
@@ -101,11 +119,13 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       setError("Failed to initialize Firebase. Please check console for details.");
       setIsAuthReady(true);
       setUserId(crypto.randomUUID());
+      setTeacherEmail(null);
+      setTeacherName(null);
     }
   }, []);
 
   return (
-    <FirebaseContext.Provider value={{ db, auth, userId, isAuthReady }}>
+    <FirebaseContext.Provider value={{ db, auth, userId, teacherEmail, teacherName, isAuthReady }}>
       {error ? (
         <div style={{ padding: '20px', color: 'red', border: '1px solid red', borderRadius: '5px', margin: '20px' }}>
           <p>Error: {error}</p>
