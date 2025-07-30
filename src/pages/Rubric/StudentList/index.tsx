@@ -1,21 +1,18 @@
 // src/pages/Rubric/StudentList/index.tsx
-import { useState, useEffect } from "react";
-import { collection, query, onSnapshot } from "firebase/firestore";
-import { useFirebase } from "../../../context/FirebaseContext";
 import type { IStudent } from "../../../interfaces/IStudent";
 import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
 interface StudentListProps {
-  assignedStudents: IStudent[]; // Agora esta lista é derivada do pai
+  assignedStudents: IStudent[];
   studentRubricGrades: IStudentRubricGrade[];
   maxGrade: number;
   selectedStudent: IStudent | null;
   onAssignStudent: (student: IStudent) => void;
-  onRemoveStudent: (studentEmail: string) => void; // Alterado para studentEmail
+  onRemoveStudent: (studentEmail: string) => void;
   onSelectStudent: (student: IStudent) => void;
-  allAvailableStudents: IStudent[]; // Nova prop: lista completa de estudantes
+  allAvailableStudents: IStudent[];
 }
 
 export function StudentList({
@@ -26,57 +23,72 @@ export function StudentList({
   onAssignStudent,
   onRemoveStudent,
   onSelectStudent,
-  allAvailableStudents, // Recebe a lista completa de estudantes
+  allAvailableStudents,
 }: StudentListProps) {
 
-  const handleSelectStudent = (student: IStudent) => {
-    // A verificação se o estudante já está atribuído é feita aqui no StudentList
-    // antes de chamar onAssignStudent no componente pai.
-    if (!assignedStudents.some((s) => s.email === student.email)) { // Comparar por email
-      onAssignStudent(student);
-    } else {
-        console.warn("Student already assigned:", student.email);
+  // Função auxiliar para adicionar sufixos ao nível de ensino
+  const getGradeLevelWithSuffix = (gradeLevel: string): string => {
+    const num = parseInt(gradeLevel);
+    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
+
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return `${gradeLevel}th`;
+    }
+
+    switch (lastDigit) {
+      case 1:
+        return `${gradeLevel}st`;
+      case 2:
+        return `${gradeLevel}nd`;
+      case 3:
+        return `${gradeLevel}rd`;
+      default:
+        return `${gradeLevel}th`;
     }
   };
 
-  // Removido o useEffect de carregamento de estudantes, pois agora allAvailableStudents vem do pai.
-  // Os estados de loadingStudents e errorLoadingStudents também podem ser removidos daqui,
-  // ou gerenciados no componente pai e passados como props se necessário para feedback visual.
-
-  // Para simplificar, assumimos que allAvailableStudents já vem carregado do Rubric/index.tsx
-  // Se houver necessidade de loading/error para allAvailableStudents aqui,
-  // esses estados e lógica devem ser passados como props do Rubric/index.tsx.
+  const handleSelectStudent = (student: IStudent) => {
+    if (!assignedStudents.some((s) => s.email === student.email)) {
+      onAssignStudent(student);
+    } else {
+        console.warn("Estudante já atribuído:", student.email);
+    }
+  };
 
   return (
     <aside className={styles.studentListContainer}>
       <h2 className={styles.title}>Assign Students</h2>
       
       <StudentAutocomplete
-        allStudents={allAvailableStudents} // Passa a lista completa para o autocomplete
+        allStudents={allAvailableStudents}
         onStudentSelect={handleSelectStudent}
       />
 
       <div className={styles.assignedList}>
         {assignedStudents.length > 0 ? (
           assignedStudents.map((student) => {
-            const isSelected = selectedStudent?.email === student.email; // Comparar por email
-            const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email); // Buscar por email
+            const isSelected = selectedStudent?.email === student.email;
+            const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email);
             const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
 
             return (
               <div 
-                key={student.email} // Usar email como key
+                key={student.email}
                 className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
                 onClick={() => onSelectStudent(student)}
               >
-                <span className={styles.studentName}>{student.name}</span>
+                {/* Exibe o nome do estudante e o nível de ensino com sufixo */}
+                <span className={styles.studentName}>{student.name} - {getGradeLevelWithSuffix(student.gradeLevel)}</span>
                 <span className={styles.studentGrade}>
                   {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
                 </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); 
-                    onRemoveStudent(student.email); // Passar email para remover
+                    onRemoveStudent(student.email);
                   }}
                   className={styles.removeButton}
                 >
@@ -86,7 +98,7 @@ export function StudentList({
             )
           })
         ) : (
-          <p className={styles.noStudentsMessage}>No students assigned yet.</p>
+          <p className={styles.noStudentsMessage}>Nenhum estudante atribuído ainda.</p>
         )}
       </div>
     </aside>

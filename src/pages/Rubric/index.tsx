@@ -41,7 +41,31 @@ export function Rubric() {
   const [error, setError] = useState<string | null>(null);
   const [allAvailableStudents, setAllAvailableStudents] = useState<IStudent[]>([]); // Nova lista para todos os estudantes
 
-  // Efeito para calcular maxGrade e gradableLineIds
+  // Função auxiliar para adicionar sufixos ao nível de ensino
+  const getGradeLevelWithSuffix = (gradeLevel: string): string => {
+    const num = parseInt(gradeLevel);
+    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
+
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return `${gradeLevel}th`;
+    }
+
+    switch (lastDigit) {
+      case 1:
+        return `${gradeLevel}st`;
+      case 2:
+        return `${gradeLevel}nd`;
+      case 3:
+        return `${gradeLevel}rd`;
+      default:
+        return `${gradeLevel}th`;
+    }
+  };
+
+  // Effect to calculate maxGrade and gradableLineIds
   useEffect(() => {
     if (!rubric) return;
 
@@ -366,7 +390,6 @@ export function Rubric() {
       return;
     }
 
-    // Removido setLoading(true) daqui para evitar flicker
     setError(null);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -450,6 +473,8 @@ export function Rubric() {
   );
   const selectedStudentGrades = selectedStudentGradeInfo?.rubricGradesLocation;
 
+  // Função auxiliar para adicionar sufixos ao nível de ensino
+
 
   return (
     <div className={styles.rubricPage}>
@@ -466,7 +491,8 @@ export function Rubric() {
             />
             {selectedStudent && selectedStudentGradeInfo && !editionMode && (
               <div className={styles.gradingStudentInfo}>
-              {selectedStudent.name + ": "}
+              {/* Exibe o nome do estudante e o nível de ensino com sufixo */}
+              {selectedStudent.name} - {getGradeLevelWithSuffix(selectedStudent.gradeLevel)}: {" "}
                 <span className={styles.gradePill}>
                   <strong>{selectedStudentGradeInfo.currentGrade === 0 ? '-' : `${selectedStudentGradeInfo.currentGrade} / ${maxGrade}`}</strong>
                 </span>

@@ -1,5 +1,5 @@
 // src/pages/Admin/index.tsx
-import { useState, useEffect, useCallback, ChangeEvent } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { collection, addDoc, query, onSnapshot, doc, setDoc } from "firebase/firestore";
 import Papa from "papaparse";
 import { useFirebase } from "../../context/FirebaseContext";
@@ -18,7 +18,7 @@ export function Admin() {
   // Efeito para carregar a lista de estudantes do Firestore
   useEffect(() => {
     if (!isAuthReady || !db || !userId) {
-      return; // Espera o Firebase estar pronto
+      return;
     }
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -38,8 +38,8 @@ export function Admin() {
         setLoadingStudents(false);
       },
       (err) => {
-        console.error("Error fetching students:", err);
-        setStudentsError("Failed to load students. Please check permissions.");
+        console.error("Erro ao buscar estudantes:", err);
+        setStudentsError("Falha ao carregar estudantes. Por favor, verifique as permissões.");
         setLoadingStudents(false);
       }
     );
@@ -58,16 +58,16 @@ export function Admin() {
 
   const handleImportStudents = async () => {
     if (!file) {
-      setImportMessage("Please select a CSV file first.");
+      setImportMessage("Por favor, selecione um arquivo CSV primeiro.");
       return;
     }
     if (!db || !userId) {
-      setImportMessage("Database not ready. Please try again.");
+      setImportMessage("Banco de dados não pronto. Por favor, tente novamente.");
       return;
     }
 
     setImporting(true);
-    setImportMessage("Importing students...");
+    setImportMessage("Importando estudantes...");
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const studentsCollectionRef = collection(db, `artifacts/${appId}/students`);
 
@@ -75,7 +75,7 @@ export function Admin() {
       header: true, // Assume que a primeira linha contém os cabeçalhos
       skipEmptyLines: true,
       complete: async (results) => {
-        const studentsToImport: IStudent[] = []; // Alterado para IStudent[] para incluir studentDocId
+        const studentsToImport: IStudent[] = [];
         let importSuccessCount = 0;
         let importErrorCount = 0;
 
@@ -95,13 +95,13 @@ export function Admin() {
               gradeLevel: gradeLevel,
             });
           } else {
-            console.warn("Skipping row due to missing required data (email, full_name, or grade_level):", row);
+            console.warn("Pulando linha devido a dados obrigatórios ausentes (email, full_name, ou grade_level):", row);
             importErrorCount++;
           }
         }
 
         if (studentsToImport.length === 0) {
-          setImportMessage("No valid students found in the CSV to import.");
+          setImportMessage("Nenhum estudante válido encontrado no CSV para importar.");
           setImporting(false);
           return;
         }
@@ -116,12 +116,12 @@ export function Admin() {
             await setDoc(studentDocRef, dataToSave);
             importSuccessCount++;
           } catch (error) {
-            console.error("Error adding/updating student to Firestore:", student, error);
+            console.error("Erro ao adicionar/atualizar estudante no Firestore:", student, error);
             importErrorCount++;
           }
         }
 
-        setImportMessage(`Import finished. Successfully imported ${importSuccessCount} students. Failed to import ${importErrorCount} students.`);
+        setImportMessage(`Importação finalizada. ${importSuccessCount} estudantes importados com sucesso. ${importErrorCount} estudantes falharam na importação.`);
         setImporting(false);
         setFile(null); // Limpa o arquivo selecionado
         if (document.getElementById('csvFileInput')) {
@@ -129,23 +129,47 @@ export function Admin() {
         }
       },
       error: (err) => {
-        console.error("CSV parsing error:", err);
-        setImportMessage(`Error parsing CSV: ${err.message}`);
+        console.error("Erro de parseamento CSV:", err);
+        setImportMessage(`Erro ao parsear CSV: ${err.message}`);
         setImporting(false);
       }
     });
   };
 
+  // Função auxiliar para adicionar sufixos ao nível de ensino
+  const getGradeLevelWithSuffix = (gradeLevel: string): string => {
+    const num = parseInt(gradeLevel);
+    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
+
+    const lastDigit = num % 10;
+    const lastTwoDigits = num % 100;
+
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+      return `${gradeLevel}th`;
+    }
+
+    switch (lastDigit) {
+      case 1:
+        return `${gradeLevel}st`;
+      case 2:
+        return `${gradeLevel}nd`;
+      case 3:
+        return `${gradeLevel}rd`;
+      default:
+        return `${gradeLevel}th`;
+    }
+  };
+
   return (
     <div className={styles.adminContainer}>
-      <h1 className={styles.title}>Admin Panel</h1>
+      <h1 className={styles.title}>Painel de Administração</h1>
 
       <section className={styles.importSection}>
-        <h2>Import Students from CSV</h2>
+        <h2>Importar Estudantes de CSV</h2>
         <p className={styles.importHint}>
-          Expected CSV columns: <strong>email</strong>, <strong>full_name</strong>, <strong>grade_level</strong> (and optionally <strong>student_id</strong>).
+          Colunas CSV esperadas: <strong>email</strong>, <strong>full_name</strong>, <strong>grade_level</strong> (e opcionalmente <strong>student_id</strong>).
           <br />
-          The 'email' column will be used as the unique identifier for each student.
+          A coluna 'email' será usada como identificador único para cada estudante.
         </p>
         <input
           type="file"
@@ -159,36 +183,36 @@ export function Admin() {
           disabled={importing || !file || !isAuthReady || !db}
           className={styles.importButton}
         >
-          {importing ? "Importing..." : "Import Students"}
+          {importing ? "Importando..." : "Importar Estudantes"}
         </button>
         {importMessage && <p className={styles.importMessage}>{importMessage}</p>}
       </section>
 
       <section className={styles.studentListSection}>
-        <h2>Current Students</h2>
+        <h2>Estudantes Atuais</h2>
         {loadingStudents ? (
-          <p>Loading students...</p>
+          <p>Carregando estudantes...</p>
         ) : studentsError ? (
           <p className={styles.errorMessage}>{studentsError}</p>
         ) : students.length === 0 ? (
-          <p>No students found. Import some from CSV!</p>
+          <p>Nenhum estudante encontrado. Importe alguns de um CSV!</p>
         ) : (
-          <div className={styles.studentTableContainer}> {/* Adicionado container para tabela */}
+          <div className={styles.studentTableContainer}>
             <table className={styles.studentTable}>
               <thead>
                 <tr>
                   <th>Email</th>
-                  <th>Full Name</th>
-                  <th>Grade Level</th>
-                  <th>Student ID</th> {/* Mantido para visualização, se for um campo distinto */}
+                  <th>Nome Completo</th>
+                  <th>Nível de Ensino</th>
+                  <th>ID do Estudante</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student.studentDocId}> {/* studentDocId é o email agora */}
+                  <tr key={student.studentDocId}>
                     <td>{student.email}</td>
                     <td>{student.name}</td>
-                    <td>{student.gradeLevel}</td>
+                    <td>{getGradeLevelWithSuffix(student.gradeLevel)}</td> {/* Aplicando a função aqui */}
                     <td>{student.studentId}</td>
                   </tr>
                 ))}

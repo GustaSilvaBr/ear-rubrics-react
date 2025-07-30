@@ -11,8 +11,9 @@ import styles from "./Home.module.scss";
 // Interface para a listagem simplificada da rubrica na Home
 interface IRubricListing {
   id: string;
-  title: string; // Alterado para string
+  title: string;
   numberOfAssignedStudents: number;
+  gradeLevels: string[]; // Adicionado: array de níveis de ensino da rubrica
 }
 
 export function Home() {
@@ -42,6 +43,7 @@ export function Home() {
             id: doc.id,
             title: data.header.title,
             numberOfAssignedStudents: numberOfAssignedStudents,
+            gradeLevels: data.header.gradeLevels || [], // Extrai os níveis de ensino
           });
         });
         setRubrics(fetchedRubrics);
@@ -92,7 +94,7 @@ export function Home() {
         rubricLines: prefilledRubricLines, // Usa as linhas pré-preenchidas
         header: {
           title: "Untitled Rubric", // Título padrão em inglês
-          gradeLevels: [],
+          gradeLevels: [], // Pode ser vazio ou preenchido com padrões se desejar
         },
       };
 
@@ -136,8 +138,7 @@ export function Home() {
         gradeLevel: "11th",
       };
       const studentDocRef = await addDoc(studentsCollectionRef, studentData);
-      // const studentDocId = studentDocRef.id; // Não usado diretamente aqui
-      console.log("Fake Student created with ID:", studentDocRef.id); // Usar studentDocRef.id para log
+      console.log("Fake Student created with ID:", studentDocRef.id);
 
       const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
       const rubricData: Omit<IRubric, 'id'> = {
@@ -145,7 +146,7 @@ export function Home() {
         teacherName: teacherName,
         studentRubricGrade: [
           {
-            studentEmail: studentData.email, // CORRIGIDO: Usar studentData.email
+            studentEmail: studentData.email,
             rubricGradesLocation: [],
             currentGrade: 0,
           }
@@ -198,7 +199,12 @@ export function Home() {
             to={`/rubric?id=${rubric.id}`}
             className={styles.rubricCard}
           >
-            <h2 className={styles.rubricName}>{rubric.title}</h2>
+            <h2 className={styles.rubricName}>
+              {rubric.title} 
+              {rubric.gradeLevels && rubric.gradeLevels.length > 0 && (
+                <span className={styles.rubricGradeLevels}> - {rubric.gradeLevels.join(', ')}</span>
+              )}
+            </h2>
             <p className={styles.studentCount}>
               {rubric.numberOfAssignedStudents} Students
             </p>
