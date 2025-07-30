@@ -8,13 +8,14 @@ import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
 interface StudentListProps {
-  assignedStudents: IStudent[];
+  assignedStudents: IStudent[]; // Agora esta lista é derivada do pai
   studentRubricGrades: IStudentRubricGrade[];
   maxGrade: number;
   selectedStudent: IStudent | null;
   onAssignStudent: (student: IStudent) => void;
-  onRemoveStudent: (studentId: string) => void; // Changed to string
+  onRemoveStudent: (studentEmail: string) => void; // Alterado para studentEmail
   onSelectStudent: (student: IStudent) => void;
+  allAvailableStudents: IStudent[]; // Nova prop: lista completa de estudantes
 }
 
 export function StudentList({
@@ -25,97 +26,57 @@ export function StudentList({
   onAssignStudent,
   onRemoveStudent,
   onSelectStudent,
+  allAvailableStudents, // Recebe a lista completa de estudantes
 }: StudentListProps) {
-  const { db, userId, isAuthReady } = useFirebase();
-  const [allAvailableStudents, setAllAvailableStudents] = useState<IStudent[]>([]);
-  const [loadingStudents, setLoadingStudents] = useState(true);
-  const [errorLoadingStudents, setErrorLoadingStudents] = useState<string | null>(null);
-
-  // Effect to load all available students from Firestore
-  useEffect(() => {
-    if (!isAuthReady || !db || !userId) {
-      return;
-    }
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const studentsCollectionRef = collection(db, `artifacts/${appId}/students`); // Public collection
-    const q = query(studentsCollectionRef);
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const fetchedStudents: IStudent[] = [];
-        snapshot.forEach((doc) => {
-          // Corrected: Map doc.id to studentDocId and ensure data is of the correct type
-          fetchedStudents.push({ studentDocId: doc.id, ...doc.data() as Omit<IStudent, 'studentDocId'> });
-        });
-        setAllAvailableStudents(fetchedStudents);
-        setLoadingStudents(false);
-      },
-      (err) => {
-        console.error("Error fetching all students for StudentList:", err);
-        setErrorLoadingStudents("Failed to load available students.");
-        setLoadingStudents(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [db, userId, isAuthReady]);
 
   const handleSelectStudent = (student: IStudent) => {
-    if (!assignedStudents.find((s) => s.studentDocId === student.studentDocId)) {
+    // A verificação se o estudante já está atribuído é feita aqui no StudentList
+    // antes de chamar onAssignStudent no componente pai.
+    if (!assignedStudents.some((s) => s.email === student.email)) { // Comparar por email
       onAssignStudent(student);
+    } else {
+        console.warn("Student already assigned:", student.email);
     }
   };
 
-  if (loadingStudents) {
-    return (
-      <aside className={styles.studentListContainer}>
-        <h2 className={styles.title}>Assign Students</h2>
-        <p>Loading available students...</p>
-      </aside>
-    );
-  }
+  // Removido o useEffect de carregamento de estudantes, pois agora allAvailableStudents vem do pai.
+  // Os estados de loadingStudents e errorLoadingStudents também podem ser removidos daqui,
+  // ou gerenciados no componente pai e passados como props se necessário para feedback visual.
 
-  if (errorLoadingStudents) {
-    return (
-      <aside className={styles.studentListContainer}>
-        <h2 className={styles.title}>Assign Students</h2>
-        <p className={styles.errorMessage}>{errorLoadingStudents}</p>
-      </aside>
-    );
-  }
+  // Para simplificar, assumimos que allAvailableStudents já vem carregado do Rubric/index.tsx
+  // Se houver necessidade de loading/error para allAvailableStudents aqui,
+  // esses estados e lógica devem ser passados como props do Rubric/index.tsx.
 
   return (
     <aside className={styles.studentListContainer}>
       <h2 className={styles.title}>Assign Students</h2>
       
       <StudentAutocomplete
-        allStudents={allAvailableStudents} // Pass the Firestore student list
+        allStudents={allAvailableStudents} // Passa a lista completa para o autocomplete
         onStudentSelect={handleSelectStudent}
       />
 
       <div className={styles.assignedList}>
         {assignedStudents.length > 0 ? (
           assignedStudents.map((student) => {
-            const isSelected = selectedStudent?.studentDocId === student.studentDocId;
-            const studentGrade = studentRubricGrades.find(g => g.studentDocId === student.studentDocId);
-            const currentGrade = studentGrade ? studentGrade.currentGrade : 0; // Corrected: studentGrade.currentGrade
+            const isSelected = selectedStudent?.email === student.email; // Comparar por email
+            const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email); // Buscar por email
+            const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
 
             return (
               <div 
-                key={student.studentDocId as string} // Ensure key is string
+                key={student.email} // Usar email como key
                 className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
                 onClick={() => onSelectStudent(student)}
               >
-                <span className={styles.studentName}>{student.name as string}</span>
+                <span className={styles.studentName}>{student.name}</span>
                 <span className={styles.studentGrade}>
                   {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
                 </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); 
-                    onRemoveStudent(student.studentDocId as string); // Ensure parameter is string
+                    onRemoveStudent(student.email); // Passar email para remover
                   }}
                   className={styles.removeButton}
                 >

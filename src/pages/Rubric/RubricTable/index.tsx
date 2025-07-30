@@ -7,10 +7,10 @@ interface RubricTableProps {
   selectedStudentGrades?: IStudentRubricGrade['rubricGradesLocation'];
   editionMode: boolean;
   onAddCategory: () => void;
-  onRemoveCategory: (lineId: String) => void;
+  onRemoveCategory: (lineId: string) => void; // DEVE SER 'string' (minúsculo)
   onGradeSelect: (categoryIndex: number, gradingIndex: number) => void;
-  onRubricLineChange: (lineId: String, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => void;
-  gradableLineIds: String[]; // Nova prop
+  onRubricLineChange: (lineId: string, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => void; // DEVE SER 'string' (minúsculo)
+  gradableLineIds: string[]; // DEVE SER 'string[]' (minúsculo)
 }
 
 export function RubricTable({
@@ -21,7 +21,7 @@ export function RubricTable({
   onRemoveCategory,
   onGradeSelect,
   onRubricLineChange,
-  gradableLineIds, // Desestruturar nova prop
+  gradableLineIds,
 }: RubricTableProps) {
   return (
     <div className={styles.tableContainer}>
@@ -38,13 +38,13 @@ export function RubricTable({
         </thead>
         <tbody>
           {rubricLines.map((line, categoryIndex) => {
-            const isLineGradable = gradableLineIds.includes(line.lineId); // Verificar se a linha é avaliável
+            const isLineGradable = gradableLineIds.includes(line.lineId);
             return (
-              <tr key={String(line.lineId)}>
+              <tr key={line.lineId}>
                 <td className={`${styles.tableCell} ${!editionMode ? styles.gradingMode : styles.editingMode}`}>
                   <textarea
                     className={styles.cellInput}
-                    value={String(line.categoryName)}
+                    value={line.categoryName}
                     onChange={(e) => onRubricLineChange(line.lineId, "categoryName", e.target.value)}
                     placeholder="Category Name..."
                     readOnly={!editionMode}
@@ -57,16 +57,16 @@ export function RubricTable({
                   return (
                     <td 
                       key={gradingIndex} 
-                      className={`${styles.tableCell} ${isSelected ? styles.selected : ''} ${!editionMode ? styles.gradingMode : styles.editingMode} ${!isLineGradable && !editionMode ? styles.disabledForGrading : ''}`} // Aplicar classe desabilitada
+                      className={`${styles.tableCell} ${isSelected ? styles.selected : ''} ${!editionMode ? styles.gradingMode : styles.editingMode} ${!isLineGradable && !editionMode ? styles.disabledForGrading : ''}`}
                       onClick={() => {
-                        if (isLineGradable && !editionMode) { // Permitir clique apenas se for avaliável e não estiver em modo de edição
+                        if (isLineGradable && !editionMode) {
                           onGradeSelect(categoryIndex, gradingIndex);
                         }
                       }}
                     >
                       <textarea
                         className={styles.cellInput}
-                        value={String(score.text)}
+                        value={score.text}
                         onChange={(e) => onRubricLineChange(line.lineId, "scoreText", e.target.value, gradingIndex)}
                         placeholder="Description..."
                         readOnly={!editionMode}
@@ -85,7 +85,7 @@ export function RubricTable({
                   )}
                 </td>
               </tr>
-            );
+            )
           })}
         </tbody>
         {editionMode && (

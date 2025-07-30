@@ -66,7 +66,7 @@
   justify-content: center;
   border: none;
   border-radius: $border-radius;
-  cursor: pointer;
+  cursor: pointer; // Adicionado cursor pointer
   transition: background-color 0.2s ease, transform 0.2s ease;
   padding: $spacing-xs;
   height: 28px;
@@ -110,6 +110,7 @@
   padding: $spacing-sm $spacing-md;
   font-size: $font-size-base;
   font-weight: $font-weight-bold;
+  cursor: pointer; // Adicionado cursor pointer explicitamente
 }
 
 .saveButton {

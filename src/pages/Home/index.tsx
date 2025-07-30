@@ -11,7 +11,7 @@ import styles from "./Home.module.scss";
 // Interface para a listagem simplificada da rubrica na Home
 interface IRubricListing {
   id: string;
-  title: String;
+  title: string; // Alterado para string
   numberOfAssignedStudents: number;
 }
 
@@ -136,8 +136,8 @@ export function Home() {
         gradeLevel: "11th",
       };
       const studentDocRef = await addDoc(studentsCollectionRef, studentData);
-      const studentDocId = studentDocRef.id;
-      console.log("Fake Student created with ID:", studentDocId);
+      // const studentDocId = studentDocRef.id; // Não usado diretamente aqui
+      console.log("Fake Student created with ID:", studentDocRef.id); // Usar studentDocRef.id para log
 
       const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
       const rubricData: Omit<IRubric, 'id'> = {
@@ -145,7 +145,7 @@ export function Home() {
         teacherName: teacherName,
         studentRubricGrade: [
           {
-            studentDocId: studentDocId,
+            studentEmail: studentData.email, // CORRIGIDO: Usar studentData.email
             rubricGradesLocation: [],
             currentGrade: 0,
           }

@@ -1,28 +1,28 @@
 export interface IRubricLine {
-    lineId: String,
-    categoryName: String,
+    lineId: string, // DEVE SER 'string' (minúsculo)
+    categoryName: string, // DEVE SER 'string' (minúsculo)
     possibleScores: [
         {
             score: 25,
-            text: String,
+            text: string, // DEVE SER 'string' (minúsculo)
         },
         {
             score: 20,
-            text: String,
+            text: string, // DEVE SER 'string' (minúsculo)
         },
         {
             score: 15,
-            text: String,
+            text: string, // DEVE SER 'string' (minúsculo)
         },
         {
             score: 10,
-            text: String,
+            text: string, // DEVE SER 'string' (minúsculo)
         }
     ]
 }
 
 export interface IStudentRubricGrade{
-    studentDocId: String, //Ref,
+    studentEmail: string, // DEVE SER 'string' (minúsculo)
     rubricGradesLocation : {
         categoryIndex: number,
         gradingIndex: number,
@@ -31,13 +31,13 @@ export interface IStudentRubricGrade{
 }
 
 export interface IRubric{
-    id?: string; // Adicione um ID opcional para o documento Firestore
-    teacherEmail: String; // Substituído teacherDocId por teacherEmail
-    teacherName: String; // Novo campo para o nome do professor
+    id?: string;
+    teacherEmail: string; // DEVE SER 'string' (minúsculo)
+    teacherName: string;  // DEVE SER 'string' (minúsculo)
     studentRubricGrade: IStudentRubricGrade[];
     rubricLines: IRubricLine[];
     header:{
-        title: String,
-        gradeLevels:String[],
+        title: string, // DEVE SER 'string' (minúsculo)
+        gradeLevels:string[], // DEVE SER 'string[]' (minúsculo)
     }
 }

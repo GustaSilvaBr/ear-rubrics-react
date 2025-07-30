@@ -4,7 +4,7 @@ import type { IStudent } from "../../../../interfaces/IStudent";
 import styles from "./StudentAutocomplete.module.scss";
 
 interface StudentAutocompleteProps {
-  allStudents: IStudent[]; // Agora recebe a lista completa do Firestore
+  allStudents: IStudent[];
   onStudentSelect: (student: IStudent) => void;
 }
 
@@ -19,7 +19,8 @@ export function StudentAutocomplete({
       return [];
     }
     return allStudents.filter((student) =>
-      String(student.name).toLowerCase().startsWith(inputValue.toLowerCase())
+      student.name.toLowerCase().startsWith(inputValue.toLowerCase()) ||
+      student.email.toLowerCase().startsWith(inputValue.toLowerCase()) // Também buscar por email
     );
   }, [inputValue, allStudents]);
 
@@ -35,17 +36,17 @@ export function StudentAutocomplete({
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         className={styles.input}
-        placeholder="Search student..."
+        placeholder="Search student by name or email..." // Atualizar placeholder
       />
       {filteredStudents.length > 0 && (
         <ul className={styles.dropdown}>
           {filteredStudents.map((student) => (
             <li
-              key={String(student.studentDocId)} // Usa studentDocId como key
+              key={student.email} // Usar email como key
               onClick={() => handleSelect(student)}
               className={styles.dropdownItem}
             >
-              {String(student.name)}
+              {student.name} ({student.email})
             </li>
           ))}
         </ul>
