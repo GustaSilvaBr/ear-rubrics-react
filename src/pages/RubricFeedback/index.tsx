@@ -1,9 +1,9 @@
 // src/pages/RubricFeedback/index.tsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { doc, getDoc, collection, query, onSnapshot } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
-import type { IRubric, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
+import type { IRubric} from "../../interfaces/IRubric";
 import type { IStudent } from "../../interfaces/IStudent";
 import { RubricTable } from "../Rubric/RubricTable"; // Reutiliza o componente RubricTable
 import styles from "./RubricFeedback.module.scss"; // Estilos específicos para esta página

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { initializeApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, type Auth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, type Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Variável para armazenar a instância do Firebase App
@@ -62,7 +62,6 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       };
 
       const localAppId = import.meta.env.VITE_APP_ID || appId;
-      const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN || (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null);
 
       if (!localFirebaseConfig.projectId) {
         console.error("Erro de inicialização do Firebase: 'projectId' não encontrado na configuração. Certifique-se de que é fornecido via variáveis globais do Canvas ou arquivo .env.");

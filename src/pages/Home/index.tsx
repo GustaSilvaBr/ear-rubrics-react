@@ -1,11 +1,9 @@
 // src/pages/Home/index.tsx
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { collection, query, onSnapshot, addDoc, doc } from "firebase/firestore";
+import { collection, query, onSnapshot, addDoc } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
 import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
-import type { ITeacher } from "../../interfaces/ITeacher";
-import type { IStudent } from "../../interfaces/IStudent";
 import styles from "./Home.module.scss";
 
 // Interface para a listagem simplificada da rubrica na Home

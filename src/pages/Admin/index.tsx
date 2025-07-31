@@ -1,6 +1,6 @@
 // src/pages/Admin/index.tsx
-import { useState, useEffect, useCallback, type ChangeEvent } from "react";
-import { collection, addDoc, query, onSnapshot, doc, setDoc } from "firebase/firestore";
+import { useState, useEffect, type ChangeEvent } from "react";
+import { collection, query, onSnapshot, doc, setDoc } from "firebase/firestore";
 import Papa from "papaparse";
 import { useFirebase } from "../../context/FirebaseContext";
 import type { IStudent } from "../../interfaces/IStudent";
