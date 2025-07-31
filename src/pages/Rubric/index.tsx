@@ -162,6 +162,7 @@ export function Rubric() {
 
     const rubricId = searchParams.get("id");
     const isNewParam = searchParams.get("isNew");
+    const studentEmailParam = searchParams.get("student"); // Captura o parâmetro 'student'
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubricId || "new");
 
@@ -170,9 +171,22 @@ export function Rubric() {
         try {
           const docSnap = await getDoc(rubricDocRef);
           if (docSnap.exists()) {
-            setRubric({ id: docSnap.id, ...docSnap.data() } as IRubric);
+            const fetchedRubric = { id: docSnap.id, ...docSnap.data() } as IRubric;
+            setRubric(fetchedRubric);
             setEditionMode(isNewParam === "true");
             setLoading(false);
+
+            // Tenta selecionar o estudante se o parâmetro 'student' estiver presente e a rubrica for carregada
+            if (studentEmailParam && allAvailableStudents.length > 0) {
+                // Decodifica o e-mail do estudante do Base64
+                const decodedStudentEmail = atob(studentEmailParam);
+                const studentToSelect = allAvailableStudents.find(s => s.email === decodedStudentEmail);
+                if (studentToSelect) {
+                    setSelectedStudent(studentToSelect);
+                } else {
+                    console.warn(`Estudante com e-mail ${decodedStudentEmail} não encontrado.`);
+                }
+            }
           } else {
             console.warn("Nenhum documento encontrado! Inicializando nova rubrica.");
             initializeNewRubric(teacherEmail, teacherName);
@@ -189,7 +203,7 @@ export function Rubric() {
       initializeNewRubric(teacherEmail, teacherName);
       setEditionMode(true); 
     }
-  }, [searchParams, db, userId, teacherEmail, teacherName, isAuthReady, initializeNewRubric]);
+  }, [searchParams, db, userId, teacherEmail, teacherName, isAuthReady, initializeNewRubric, allAvailableStudents]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!rubric) return;
@@ -446,6 +460,33 @@ export function Rubric() {
     }
   };
 
+  // Função para gerar o link de compartilhamento
+  const handleShare = () => {
+    if (!rubric || !rubric.id) {
+      alert("Por favor, salve a rubrica antes de compartilhar.");
+      return;
+    }
+    if (!selectedStudent || !selectedStudent.email || !userId) { // userId do professor é necessário
+      alert("Por favor, selecione um estudante e certifique-se de que o professor está logado para compartilhar a rubrica.");
+      return;
+    }
+
+    // Codifica o e-mail do estudante em Base64 para ofuscação
+    const encodedStudentEmail = btoa(selectedStudent.email);
+    // Constrói a URL de compartilhamento, incluindo o userId do professor e o e-mail codificado
+    const shareableUrl = `${window.location.origin}/rubricFeedback?id=${rubric.id}&student=${encodedStudentEmail}&teacherUid=${userId}`;
+    
+    // Copia para a área de transferência (usando document.execCommand para compatibilidade em iframes)
+    const el = document.createElement('textarea');
+    el.value = shareableUrl;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+
+    alert(`Link de compartilhamento copiado! \n${shareableUrl}`);
+  };
+
   const handleCancel = () => {
     if (originalRubric) {
       setRubric(originalRubric);
@@ -453,8 +494,6 @@ export function Rubric() {
     setEditionMode(false);
     setOriginalRubric(null);
   };
-
-  const handleShare = () => alert("Ação de Compartilhar!");
 
   if (loading) {
     return <div className={styles.rubricPage}>Carregando rubrica...</div>;
@@ -472,8 +511,6 @@ export function Rubric() {
     (g) => g.studentEmail === selectedStudent?.email
   );
   const selectedStudentGrades = selectedStudentGradeInfo?.rubricGradesLocation;
-
-  // Função auxiliar para adicionar sufixos ao nível de ensino
 
 
   return (
@@ -512,7 +549,12 @@ export function Rubric() {
               </>
             ) : (
               <>
-                <button onClick={handleShare} className={styles.shareButton} aria-label="Compartilhar Rubrica">
+                <button 
+                  onClick={handleShare} 
+                  className={styles.shareButton} 
+                  aria-label="Compartilhar Rubrica"
+                  disabled={!rubric.id || !selectedStudent || !userId} 
+                >
                   <ShareIcon />
                 </button>
                 <DropdownMenu

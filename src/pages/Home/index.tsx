@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { collection, query, onSnapshot, addDoc, doc } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
-import type { IRubric, IRubricLine } from "../../interfaces/IRubric"; // Import IRubricLine
+import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
 import type { ITeacher } from "../../interfaces/ITeacher";
 import type { IStudent } from "../../interfaces/IStudent";
 import styles from "./Home.module.scss";
@@ -13,7 +13,7 @@ interface IRubricListing {
   id: string;
   title: string;
   numberOfAssignedStudents: number;
-  gradeLevels: string[]; // Adicionado: array de níveis de ensino da rubrica
+  gradeLevels: string[];
 }
 
 export function Home() {
@@ -43,7 +43,7 @@ export function Home() {
             id: doc.id,
             title: data.header.title,
             numberOfAssignedStudents: numberOfAssignedStudents,
-            gradeLevels: data.header.gradeLevels || [], // Extrai os níveis de ensino
+            gradeLevels: data.header.gradeLevels || [],
           });
         });
         setRubrics(fetchedRubrics);
@@ -109,69 +109,6 @@ export function Home() {
     }
   };
 
-  // Função para criar dados fake no banco de dados (mantida para testes)
-  const createFakeData = async () => {
-    if (!db || !userId || !teacherEmail || !teacherName) {
-      alert("Firebase is not initialized or user information (email/name) not available.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-    try {
-      const teachersCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/teachers`);
-      const teacherData: Omit<ITeacher, 'teacherDocId'> = {
-        name: teacherName,
-        email: teacherEmail,
-      };
-      const teacherDocRef = await addDoc(teachersCollectionRef, teacherData);
-      const teacherDocId = teacherDocRef.id;
-      console.log("Fake Teacher created with ID:", teacherDocId);
-
-      const studentsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/students`);
-      const studentData: Omit<IStudent, 'studentDocId'> = {
-        name: "John Doe",
-        studentId: "1020/1",
-        email: "john.doe@ear.com.br",
-        gradeLevel: "11th",
-      };
-      const studentDocRef = await addDoc(studentsCollectionRef, studentData);
-      console.log("Fake Student created with ID:", studentDocRef.id);
-
-      const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
-      const rubricData: Omit<IRubric, 'id'> = {
-        teacherEmail: teacherEmail,
-        teacherName: teacherName,
-        studentRubricGrade: [
-          {
-            studentEmail: studentData.email,
-            rubricGradesLocation: [],
-            currentGrade: 0,
-          }
-        ],
-        rubricLines: [
-            { lineId: "line-1", categoryName: "Category 1", possibleScores: [{ score: 25, text: "Desc 1" }, { score: 20, text: "Desc 2" }, { score: 15, text: "Desc 3" }, { score: 10, text: "Desc 4" }] },
-            { lineId: "line-2", categoryName: "Category 2", possibleScores: [{ score: 25, text: "Desc A" }, { score: 20, text: "Desc B" }, { score: 15, text: "Desc C" }, { score: 10, text: "Desc D" }] },
-        ],
-        header: {
-          title: "Teste Rubrica Fake",
-          gradeLevels: ["9th"],
-        },
-      };
-      await addDoc(rubricsCollectionRef, rubricData);
-      console.log("Fake Rubric created successfully!");
-
-      alert("Fake data created successfully!");
-    } catch (e) {
-      console.error("Error creating fake data: ", e);
-      setError("Failed to create fake data. Please check console for details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) {
     return <div className={styles.homeContainer}>Loading rubrics...</div>;
   }
@@ -183,9 +120,7 @@ export function Home() {
   return (
     <div className={styles.homeContainer}>
       <h1 className={styles.title}>My Rubrics</h1>
-      <button onClick={createFakeData} style={{ marginBottom: '20px', padding: '10px 15px', fontSize: '16px' }}>
-        Create Fake Data
-      </button>
+      {/* Removido o botão "Create Fake Data" */}
       <div className={styles.rubricGrid}>
         {/* Card para Adicionar Nova Rúbrica - AGORA CRIA E REDIRECIONA */}
         <div className={styles.addRubricCard} onClick={handleCreateNewRubric}>

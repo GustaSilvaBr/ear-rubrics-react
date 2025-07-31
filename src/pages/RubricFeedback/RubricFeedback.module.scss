@@ -1,0 +1,111 @@
+// src/pages/RubricFeedback/RubricFeedback.module.scss
+@import "../../styles/variables";
+
+.feedbackContainer {
+  // Aumenta a largura máxima para ocupar mais a tela
+  max-width: 1200px; // Aumentado de 900px para 1200px
+  width: 95%; // Garante que ocupe uma boa parte da largura disponível
+  margin: $spacing-md auto;
+  background-color: #ffffff;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: $spacing-lg; // Aumenta o padding geral
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.headerContent {
+  width: 100%;
+}
+
+.title {
+  font-size: $font-size-xl * 1.2; // Título um pouco maior
+  color: $primary-color;
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-xs;
+}
+
+.gradingStudentInfo {
+  font-size: $font-size-base * 1.1; // Texto um pouco maior
+  color: lighten($text-color, 30%);
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.gradePill {
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  background-color: lighten($secondary-color, 3%);
+  padding: 2px $spacing-sm;
+  border-radius: 12px;
+  border: 1px solid $primary-color;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid $border-color;
+  margin-top: 0;
+}
+
+// --- NOVOS ESTILOS PARA A TABELA (SOBRESCREVENDO RubricTable.module.scss) ---
+// Estes estilos usam :global para afetar os elementos dentro do RubricTable
+// APENAS quando ele está aninhado dentro de .feedbackContainer
+
+:global(.feedbackContainer) {
+  .rubricTable {
+    width: 100%; // Garante que a tabela ocupe toda a largura do container
+    table-layout: fixed; // Mantém o layout fixo para controle de largura
+
+    th, td {
+      padding: $spacing-md; // Aumenta o padding das células
+      font-size: $font-size-base * 1.1; // Aumenta o tamanho da fonte
+      vertical-align: top;
+    }
+
+    // Ajusta a altura mínima das células para torná-las maiores
+    td.tableCell {
+      min-height: 120px; // Aumenta a altura mínima das células (era 90px)
+      height: auto; // Permite que a altura se ajuste ao conteúdo se for maior
+    }
+
+    // Aumenta o tamanho da fonte para o texto dentro das textareas
+    textarea.cellInput {
+      font-size: $font-size-base * 1.1; // Aumenta a fonte do input
+      padding: $spacing-sm; // Ajusta o padding interno do textarea
+    }
+
+    // Garante que a coluna de categoria seja um pouco maior
+    .categoryHeader {
+      width: 180px; // Aumenta a largura da coluna de categoria (era 130px)
+    }
+
+    // Ajusta a largura das colunas de score
+    .scoreHeader {
+      width: calc((100% - 180px - 10px) / 4); // Distribui o restante da largura igualmente
+    }
+
+    // Garante que a coluna de ação seja pequena
+    .actionHeader {
+      width: 10px; // Mantém a largura da coluna de ação
+    }
+
+    // Remove efeitos de hover e cursor de edição para visualização
+    .tableCell {
+      &.gradingMode {
+        &:hover {
+          background-color: transparent;
+        }
+        textarea {
+          cursor: default;
+        }
+      }
+    }
+  }
+}

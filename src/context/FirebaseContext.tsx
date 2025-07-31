@@ -11,8 +11,8 @@ interface FirebaseContextType {
   db: Firestore | null;
   auth: Auth | null;
   userId: string | null;
-  teacherEmail: string | null; // Adicionado teacherEmail ao contexto
-  teacherName: string | null;  // Adicionado teacherName ao contexto
+  teacherEmail: string | null;
+  teacherName: string | null;
   isAuthReady: boolean;
 }
 
@@ -21,8 +21,8 @@ const FirebaseContext = createContext<FirebaseContextType>({
   db: null,
   auth: null,
   userId: null,
-  teacherEmail: null, // Valor inicial
-  teacherName: null,  // Valor inicial
+  teacherEmail: null,
+  teacherName: null,
   isAuthReady: false,
 });
 
@@ -38,10 +38,10 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [auth, setAuth] = useState<Auth | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [teacherEmail, setTeacherEmail] = useState<string | null>(null); // Estado para teacherEmail
-  const [teacherName, setTeacherName] = useState<string | null>(null);    // Estado para teacherName
+  const [teacherEmail, setTeacherEmail] = useState<string | null>(null);
+  const [teacherName, setTeacherName] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Adicionado estado de erro local
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let firestore: Firestore;
@@ -51,7 +51,6 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       const firebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : {};
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-      // Use as variáveis de ambiente do Vite para o ambiente local
       const localFirebaseConfig = {
         apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey,
         authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain,
@@ -66,17 +65,16 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN || (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null);
 
       if (!localFirebaseConfig.projectId) {
-        console.error("Firebase Initialization Error: 'projectId' not found in firebase configuration. Please ensure it's provided via Canvas global variables or .env file.");
-        setError("Firebase configuration missing projectId. Cannot connect to database.");
+        console.error("Erro de inicialização do Firebase: 'projectId' não encontrado na configuração. Certifique-se de que é fornecido via variáveis globais do Canvas ou arquivo .env.");
+        setError("Configuração do Firebase ausente projectId. Não é possível conectar ao banco de dados.");
         setIsAuthReady(true);
-        setUserId(crypto.randomUUID());
+        setUserId(null); // Define como null se a inicialização falhar
         return;
       }
 
-      // Inicializa o Firebase App e atribui à variável exportada
       app = initializeApp(localFirebaseConfig, localAppId);
       firestore = getFirestore(app);
-      firebaseAuth = getAuth(app); // Passa a instância do app explicitamente
+      firebaseAuth = getAuth(app);
 
       setDb(firestore);
       setAuth(firebaseAuth);
@@ -84,41 +82,25 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
       const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
           setUserId(user.uid);
-          setTeacherEmail(user.email);       // Salva o email do usuário
-          setTeacherName(user.displayName); // Salva o nome de exibição do usuário
+          setTeacherEmail(user.email);
+          setTeacherName(user.displayName);
         } else {
-          setUserId(null); // Limpa o userId se não houver usuário
-          setTeacherEmail(null); // Limpa o email
-          setTeacherName(null);  // Limpa o nome
-          try {
-            if (initialAuthToken) {
-              const userCredential = await signInWithCustomToken(firebaseAuth, initialAuthToken);
-              setUserId(userCredential.user.uid);
-              setTeacherEmail(userCredential.user.email);
-              setTeacherName(userCredential.user.displayName);
-            } else {
-              const userCredential = await signInAnonymously(firebaseAuth);
-              setUserId(userCredential.user.uid);
-              // Usuários anônimos geralmente não têm email/displayName, mas podemos definir como null
-              setTeacherEmail(null);
-              setTeacherName("Anonymous User"); // Nome padrão para anônimos
-            }
-          } catch (authError) {
-            console.error("Firebase authentication error:", authError);
-            setUserId(crypto.randomUUID()); // Fallback para ID aleatório em caso de erro
-            setTeacherEmail(null);
-            setTeacherName(null);
-          }
+          // Se não houver usuário logado (e não há token inicial), não tente signInAnonymously.
+          // Apenas defina userId como null.
+          setUserId(null); // IMPORTANTE: Define userId como null para usuários não logados
+          setTeacherEmail(null);
+          setTeacherName(null);
+          // Não há necessidade de try-catch aqui, pois não estamos chamando uma operação de autenticação
         }
         setIsAuthReady(true);
       });
 
       return () => unsubscribe();
     } catch (initError) {
-      console.error("Failed to initialize Firebase:", initError);
-      setError("Failed to initialize Firebase. Please check console for details.");
+      console.error("Falha ao inicializar o Firebase:", initError);
+      setError("Falha ao inicializar o Firebase. Por favor, verifique o console para detalhes.");
       setIsAuthReady(true);
-      setUserId(crypto.randomUUID());
+      setUserId(null); // Define como null se a inicialização falhar
       setTeacherEmail(null);
       setTeacherName(null);
     }
@@ -128,8 +110,8 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
     <FirebaseContext.Provider value={{ db, auth, userId, teacherEmail, teacherName, isAuthReady }}>
       {error ? (
         <div style={{ padding: '20px', color: 'red', border: '1px solid red', borderRadius: '5px', margin: '20px' }}>
-          <p>Error: {error}</p>
-          <p>Please ensure your Firebase credentials are correctly configured in a `.env` file for local development, or provided by the Canvas environment.</p>
+          <p>Erro: {error}</p>
+          <p>Certifique-se de que suas credenciais do Firebase estão configuradas corretamente em um arquivo `.env` para desenvolvimento local, ou fornecidas pelo ambiente Canvas.</p>
         </div>
       ) : (
         children
