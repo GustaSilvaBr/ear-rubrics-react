@@ -33,7 +33,7 @@ export function RubricTable({
             <th className={styles.scoreHeader}>Good (20)</th>
             <th className={styles.scoreHeader}>Average (15)</th>
             <th className={styles.scoreHeader}>Needs Improvement (10)</th>
-            <th className={styles.actionHeader}></th>
+            {editionMode && <th className={styles.actionHeader}></th>}
           </tr>
         </thead>
         <tbody>
@@ -55,8 +55,8 @@ export function RubricTable({
                     g => g.categoryIndex === categoryIndex && g.gradingIndex === gradingIndex
                   );
                   return (
-                    <td 
-                      key={gradingIndex} 
+                    <td
+                      key={gradingIndex}
                       className={`${styles.tableCell} ${isSelected ? styles.selected : ''} ${!editionMode ? styles.gradingMode : styles.editingMode} ${!isLineGradable && !editionMode ? styles.disabledForGrading : ''}`}
                       onClick={() => {
                         if (isLineGradable && !editionMode) {
@@ -74,16 +74,17 @@ export function RubricTable({
                     </td>
                   )
                 })}
-                <td className={styles.actionCell}>
-                  {editionMode && (
+
+                {editionMode && (
+                  <td className={styles.actionCell}>
                     <button
                       onClick={() => onRemoveCategory(line.lineId)}
                       className={styles.deleteButton}
                     >
                       -
                     </button>
-                  )}
-                </td>
+                  </td>
+                )}
               </tr>
             )
           })}

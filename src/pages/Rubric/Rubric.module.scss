@@ -3,15 +3,13 @@
 
 .rubricPage {
   display: flex;
-  gap: 2rem;
-  padding: 0;
-  height: calc(90vh - 64px); // Adjust based on navbar height
+  gap: 1rem; // Reduced gap
+  padding: 1rem;
+  height: calc(100vh - 80px); // Use more viewport height
   overflow: hidden;
-  
 
-  // sidebar proportion (Left)
   .studentListSidebar {
-    flex: 0 0 300px; // Fixed width sidebar
+    flex: 0 0 250px;
     background: white;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -20,14 +18,12 @@
     overflow: hidden;
   }
 
-  // main content proportion (Right)
   .rubricContent {
     flex: 1;
     background: white;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 0;
-    overflow-y: auto;
+    overflow: hidden; // Disable parent scrollbar
     display: flex;
     flex-direction: column;
   }
