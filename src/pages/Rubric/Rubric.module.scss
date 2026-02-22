@@ -2,133 +2,124 @@
 @import "../../styles/variables";
 
 .rubricPage {
-  display: grid;
-  grid-template-columns: 1fr minmax(auto, 270px);
-  gap: $spacing-lg;
+  display: flex;
+  gap: 2rem;
+  padding: 0;
+  height: calc(90vh - 64px); // Adjust based on navbar height
+  overflow: hidden;
+  
+
+  // sidebar proportion (Left)
+  .studentListSidebar {
+    flex: 0 0 300px; // Fixed width sidebar
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  // main content proportion (Right)
+  .rubricContent {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
-.rubricContent {
-  min-width: 0;
-}
-
-.studentListSidebar {
-  // Styles for the sidebar
-}
-
-.header {
+.toolbar {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: $spacing-md;
-  margin-bottom: $spacing-sm;
-}
-
-.headerContent {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  flex-grow: 1; 
-  min-width: 0;
-}
-
-.titleInput {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: $primary-color;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  font-family: $font-family-sans;
-  padding: $spacing-xs 0;
-  width: 100%;
-
-  &:focus {
-    outline: none;
-    border-bottom: 2px solid $primary-color;
-  }
-}
-
-.divider {
-  border: none;
-  border-top: 1px solid $border-color;
-  margin-top: 0;
-}
-
-.headerActions {
-  display: flex;
   align-items: center;
-  gap: $spacing-sm;
-}
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
 
-%action-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: $border-radius;
-  cursor: pointer; // Adicionado cursor pointer
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  padding: $spacing-xs;
-  height: 28px;
-  width: 28px;
+  .toolbarStatus {
+    .titleInput {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      border: 1px solid transparent;
+      padding: 0.5rem;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 400px;
 
-  &:hover {
-    transform: scale(1.05);
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        background-color: #f1f5f9;
+      }
+    }
+
+    .gradingStudentInfo {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .gradePill {
+        background: #f1f5f9;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 1rem;
+        color: $primary-color;
+      }
+    }
   }
 
-  svg {
-    width: 18px;
-    height: 18px;
-    stroke-width: 2.5;
-  }
-}
+  .toolbarActions {
+    display: flex;
+    gap: 0.75rem;
 
-.shareButton {
-  @extend %action-button;
-  background-color: $success-color;
-  color: #fff;
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
 
-  &:hover {
-    background-color: darken($success-color, 10%);
-  }
-}
+      &.saveButton {
+        background: $primary-color;
+        color: white;
+        border: none;
+        &:hover { background: darken($primary-color, 10%); }
+      }
 
-.optionsButton {
-  @extend %action-button;
-  background-color: darken($border-color, 15%);
-  color: $text-color;
+      &.cancelButton {
+        background: white;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        &:hover { background: #f8fafc; }
+      }
 
-  &:hover {
-    background-color: darken($border-color, 25%);
-  }
-}
+      &.shareButton {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        &:hover { background: #e2e8f0; }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+      }
 
-// --- NEW BUTTON STYLES FOR EDIT MODE ---
-.saveButton, .cancelButton {
-  height: auto;
-  width: auto;
-  padding: $spacing-sm $spacing-md;
-  font-size: $font-size-base;
-  font-weight: $font-weight-bold;
-  cursor: pointer; // Adicionado cursor pointer explicitamente
-}
-
-.saveButton {
-  background-color: $success-color;
-  color: #fff;
-  border: 1px solid transparent;
-  
-  &:hover {
-    background-color: darken($primary-color, 10%);
-  }
-}
-
-.cancelButton {
-  background-color: transparent;
-  color: $text-color;
-  border: 1px solid $border-color;
-
-  &:hover {
-    background-color: darken($border-color, 5%);
+      &.optionsButton {
+        background: transparent;
+        color: #64748b;
+        border: none;
+        padding: 0.5rem;
+        &:hover { color: #1e293b; }
+      }
+    }
   }
 }

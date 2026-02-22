@@ -5,12 +5,12 @@ import styles from "./StudentAutocomplete.module.scss";
 
 interface StudentAutocompleteProps {
   allStudents: IStudent[];
-  onStudentSelect: (student: IStudent) => void;
+  onSelect: (student: IStudent) => void;
 }
 
 export function StudentAutocomplete({
   allStudents,
-  onStudentSelect,
+  onSelect,
 }: StudentAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -51,7 +51,7 @@ export function StudentAutocomplete({
   }, [inputValue, allStudents]);
 
   const handleSelect = (student: IStudent) => {
-    onStudentSelect(student);
+    onSelect(student);
     setInputValue(""); // Limpar input após seleção
   };
 

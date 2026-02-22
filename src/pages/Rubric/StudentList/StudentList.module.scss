@@ -1,103 +1,83 @@
 // src/pages/Rubric/StudentList/StudentList.module.scss
-@import "../../../styles/variables";
-
 .studentListContainer {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  padding: 0 $spacing-md;
-  background-color: lighten($secondary-color, 3%);
-  border-left: 1px solid $border-color;
-  max-height: 460px;
+  gap: 1rem;
+  height: 100%;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1e293b;
+  }
 }
 
-.title {
-  font-size: $font-size-large;
-  color: $primary-color;
-  margin-top: $spacing-sm;
-  padding-bottom: $spacing-sm;
-  border-bottom: 1px solid $border-color;
-  flex-shrink: 0;
-}
-
-.gradingStudentInfo {
-  font-size: $font-size-base;
-  color: lighten($text-color, 30%);
-  margin-top: -$spacing-xs;
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.gradePill {
-  font-weight: $font-weight-bold;
-  color: $primary-color;
-  background-color: lighten($secondary-color, 3%);
-  padding: 2px $spacing-sm;
-  border-radius: 12px;
-  border: 1px solid $primary-color;
-}
-
-.assignedList {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-  flex-grow: 1;
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   overflow-y: auto;
-  min-height: 0;
-}
+  flex: 1;
 
-.studentItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: $spacing-xs $spacing-sm;
-  background-color: #fff;
-  border-radius: $border-radius;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  font-size: $font-size-base;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  .listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
 
-  &.selected {
-    background-color: $secondary-color;
-    border: 1px solid $primary-color;
+    &:hover {
+      background-color: #f1f5f9;
+      .actions { opacity: 1; }
+    }
+
+    &.selected {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      .name { color: #2563eb; font-weight: 600; }
+    }
+
+    .studentInfo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      
+      .name { font-size: 0.9rem; color: #334155; }
+      .grade { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0.3;
+      transition: opacity 0.2s;
+
+      button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        
+        &.shareBtn {
+          color: #3b82f6;
+          &:hover { background: #dbeafe; }
+        }
+
+        &.removeBtn {
+          color: #94a3b8;
+          font-size: 1.2rem;
+          &:hover { color: #ef4444; background: #fee2e2; }
+        }
+      }
+    }
   }
-}
-
-.studentName {
-  flex-grow: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.studentGrade {
-  margin: 0 $spacing-sm;
-  font-weight: $font-weight-bold;
-  color: $primary-color;
-  flex-shrink: 0;
-  min-width: 60px; // Ensures consistent width
-  text-align: center; // Aligns the text
-}
-
-.removeButton {
-  background: transparent;
-  border: none;
-  color: $error-color;
-  font-size: $font-size-large;
-  cursor: pointer;
-  padding: 0 $spacing-xs;
-  flex-shrink: 0;
-
-  &:hover {
-    color: darken($error-color, 15%);
-  }
-}
-
-.noStudentsMessage {
-  font-size: $font-size-base;
-  color: lighten($text-color, 40%);
-  text-align: center;
-  padding: $spacing-md 0;
 }

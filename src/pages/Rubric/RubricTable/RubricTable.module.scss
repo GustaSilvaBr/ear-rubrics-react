@@ -7,7 +7,7 @@
 .tableContainer {
   // Set a height for the scrollable area. This is calculated to show about 4 rows.
 
-  max-height: 420px;
+  max-height: 450px;
   // This is the key property that creates the vertical scrollbar if content overflows.
   overflow-y: scroll;
   // This is required for sticky positioning to work inside this element.
@@ -16,7 +16,9 @@
   box-shadow: $box-shadow;
   border-radius: $border-radius;
   border: 1px solid $border-color;
-  margin-top: $spacing-md;
+  margin-top: 0;
+  /* Increased height by 40px */
+  min-height:100%;
 }
 
 // 2. Add sticky properties to the existing header definition

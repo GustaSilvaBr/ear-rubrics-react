@@ -1,8 +1,16 @@
 // src/pages/Rubric/StudentList/index.tsx
+import React from 'react';
 import type { IStudent } from "../../../interfaces/IStudent";
 import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
+
+const ShareIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
+    </svg>
+);
 
 interface StudentListProps {
   assignedStudents: IStudent[];
@@ -13,6 +21,8 @@ interface StudentListProps {
   onRemoveStudent: (studentEmail: string) => void;
   onSelectStudent: (student: IStudent) => void;
   allAvailableStudents: IStudent[];
+  rubricId?: string;
+  teacherUid?: string | null;
 }
 
 export function StudentList({
@@ -24,83 +34,71 @@ export function StudentList({
   onRemoveStudent,
   onSelectStudent,
   allAvailableStudents,
+  rubricId,
+  teacherUid
 }: StudentListProps) {
 
-  // Função auxiliar para adicionar sufixos ao nível de ensino
-  const getGradeLevelWithSuffix = (gradeLevel: string): string => {
-    const num = parseInt(gradeLevel);
-    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
-
-    const lastDigit = num % 10;
-    const lastTwoDigits = num % 100;
-
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-      return `${gradeLevel}th`;
+  const handleShare = (e: React.MouseEvent, studentEmail: string) => {
+    e.stopPropagation();
+    if (!rubricId || !teacherUid) {
+      alert("Save the rubric before sharing.");
+      return;
     }
-
-    switch (lastDigit) {
-      case 1:
-        return `${gradeLevel}st`;
-      case 2:
-        return `${gradeLevel}nd`;
-      case 3:
-        return `${gradeLevel}rd`;
-      default:
-        return `${gradeLevel}th`;
-    }
-  };
-
-  const handleSelectStudent = (student: IStudent) => {
-    if (!assignedStudents.some((s) => s.email === student.email)) {
-      onAssignStudent(student);
-    } else {
-        console.warn("Estudante já atribuído:", student.email);
-    }
+    const encodedEmail = btoa(studentEmail);
+    const shareableUrl = `${window.location.origin}/rubricFeedback?id=${rubricId}&student=${encodedEmail}&teacherUid=${teacherUid}`;
+    
+    const el = document.createElement('textarea');
+    el.value = shareableUrl;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    alert("Link copied to clipboard!");
   };
 
   return (
-    <aside className={styles.studentListContainer}>
-      <h2 className={styles.title}>Assign Students</h2>
-      
-      <StudentAutocomplete
-        allStudents={allAvailableStudents}
-        onStudentSelect={handleSelectStudent}
+    <div className={styles.studentListContainer}>
+      <h3>Students</h3>
+      <StudentAutocomplete 
+        allStudents={allAvailableStudents} 
+        onSelect={onAssignStudent} 
       />
+      <ul className={styles.list}>
+        {assignedStudents.map((student) => {
+          const gradeInfo = studentRubricGrades.find(g => g.studentEmail === student.email);
+          const isSelected = selectedStudent?.email === student.email;
 
-      <div className={styles.assignedList}>
-        {assignedStudents.length > 0 ? (
-          assignedStudents.map((student) => {
-            const isSelected = selectedStudent?.email === student.email;
-            const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email);
-            const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
-
-            return (
-              <div 
-                key={student.email}
-                className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
-                onClick={() => onSelectStudent(student)}
-              >
-                {/* Exibe o nome do estudante e o nível de ensino com sufixo */}
-                <span className={styles.studentName}>{student.name} - {getGradeLevelWithSuffix(student.gradeLevel)}</span>
-                <span className={styles.studentGrade}>
-                  {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
+          return (
+            <li 
+              key={student.email} 
+              className={`${styles.listItem} ${isSelected ? styles.selected : ''}`}
+              onClick={() => onSelectStudent(student)}
+            >
+              <div className={styles.studentInfo}>
+                <span className={styles.name}>{student.name}</span>
+                <span className={styles.grade}>
+                    {gradeInfo ? `${gradeInfo.currentGrade}/${maxGrade}` : `0/${maxGrade}`}
                 </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); 
-                    onRemoveStudent(student.email);
-                  }}
-                  className={styles.removeButton}
+              </div>
+              <div className={styles.actions}>
+                <button 
+                  className={styles.shareBtn} 
+                  onClick={(e) => handleShare(e, student.email)}
+                  title="Copy link"
+                >
+                  <ShareIcon />
+                </button>
+                <button 
+                  className={styles.removeBtn} 
+                  onClick={(e) => { e.stopPropagation(); onRemoveStudent(student.email); }}
                 >
                   &times;
                 </button>
               </div>
-            )
-          })
-        ) : (
-          <p className={styles.noStudentsMessage}>Nenhum estudante atribuído ainda.</p>
-        )}
-      </div>
-    </aside>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

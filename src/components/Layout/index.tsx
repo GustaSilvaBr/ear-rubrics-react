@@ -1,10 +1,10 @@
 // src/components/Layout/index.tsx
 import { Outlet, useNavigate, Link } from "react-router-dom";
-import { signOut } from "../../auth"; // Importe a função signOut
+import { useState } from "react";
+import { signOut } from "../../auth";
 import { useFirebase } from "../../context/FirebaseContext";
 import styles from "./Layout.module.scss";
 
-// A simple book icon for the application brand
 const AppIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -24,19 +24,19 @@ const AppIcon = () => (
 
 export function Layout() {
   const navigate = useNavigate();
-  const { auth, isAuthReady } = useFirebase(); // Obtenha auth e isAuthReady do contexto
+  const { auth, isAuthReady } = useFirebase();
+  const [headerTitle, setHeaderTitle] = useState<string>("");
 
   const handleSignOut = async () => {
-    if (!auth) { // Garante que a instância auth está disponível
+    if (!auth) {
       console.error("Firebase Auth not initialized.");
       return;
     }
     try {
-      await signOut(auth); // <--- AQUI: Passa a instância 'auth'
+      await signOut(auth);
       navigate("/login");
     } catch (error) {
       console.error("Failed to sign out:", error);
-      // Você pode adicionar um tratamento de erro na UI aqui, se necessário
     }
   };
 
@@ -45,16 +45,16 @@ export function Layout() {
       <nav className={styles.navbar}>
         <Link to="/" className={styles.navBrand}>
           <AppIcon />
-          <span>EAR Rubrics</span>
+          <span>EAR Rubrics{headerTitle ? ` - ${headerTitle}` : ""}</span>
         </Link>
-        {isAuthReady && auth?.currentUser && ( // Mostra o botão de logout apenas se houver um usuário logado e auth estiver pronto
+        {isAuthReady && auth?.currentUser && (
           <button onClick={handleSignOut} className={styles.signOutButton}>
             Sign Out
           </button>
         )}
       </nav>
       <main className={styles.content}>
-        <Outlet />
+        <Outlet context={{ setHeaderTitle }} />
       </main>
     </div>
   );
