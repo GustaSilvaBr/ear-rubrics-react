@@ -3,119 +3,63 @@
 
 .rubricPage {
   display: flex;
-  gap: 1rem; // Reduced gap
-  padding: 1rem;
-  height: calc(100vh - 80px); // Use more viewport height
+  // Use calc to account for the navbar height (60px)
+  height: calc(100vh - 60px); 
+  gap: $spacing-md;
   overflow: hidden;
+  background-color: $background-color;
+}
 
-  .studentListSidebar {
-    flex: 0 0 250px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+.studentListSidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-right: 1px solid $border-color;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.rubricContent {
+  flex-grow: 1;
+  // Allow the content to take up to 90% of the viewport height before internal scrolling
+  max-height: 90vh; 
+  overflow-y: auto;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  
+  // Custom scrollbar styling for a cleaner look
+  &::-webkit-scrollbar {
+    width: 8px;
   }
-
-  .rubricContent {
-    flex: 1;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow: hidden; // Disable parent scrollbar
-    display: flex;
-    flex-direction: column;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
   }
 }
 
-.toolbar {
+.saveActions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
+  justify-content: flex-end;
+  margin-top: $spacing-md;
+  padding: $spacing-sm 0;
+}
 
-  .toolbarStatus {
-    .titleInput {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e293b;
-      border: 1px solid transparent;
-      padding: 0.5rem;
-      border-radius: 4px;
-      width: 100%;
-      max-width: 400px;
+.saveButton {
+  background-color: $success-color;
+  color: white;
+  border: none;
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $border-radius;
+  cursor: pointer;
+  font-weight: $font-weight-bold;
+  transition: opacity 0.2s;
 
-      &:focus {
-        outline: none;
-        border-color: $primary-color;
-        background-color: #f1f5f9;
-      }
-    }
-
-    .gradingStudentInfo {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #475569;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .gradePill {
-        background: #f1f5f9;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 1rem;
-        color: $primary-color;
-      }
-    }
-  }
-
-  .toolbarActions {
-    display: flex;
-    gap: 0.75rem;
-
-    button {
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &.saveButton {
-        background: $primary-color;
-        color: white;
-        border: none;
-        &:hover { background: darken($primary-color, 10%); }
-      }
-
-      &.cancelButton {
-        background: white;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-        &:hover { background: #f8fafc; }
-      }
-
-      &.shareButton {
-        background: #f1f5f9;
-        color: #475569;
-        border: none;
-        &:hover { background: #e2e8f0; }
-        &:disabled { opacity: 0.5; cursor: not-allowed; }
-      }
-
-      &.optionsButton {
-        background: transparent;
-        color: #64748b;
-        border: none;
-        padding: 0.5rem;
-        &:hover { color: #1e293b; }
-      }
-    }
+  &:hover {
+    opacity: 0.9;
   }
 }

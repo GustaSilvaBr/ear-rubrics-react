@@ -11,12 +11,16 @@ import styles from "./Rubric.module.scss";
 
 interface LayoutContextType {
   setHeaderTitle: (title: string) => void;
+  setOnEditCallback: (fn: (() => void) | null) => void;
+  setOnSaveCallback: (fn: (() => void) | null) => void;
+  setOnCancelCallback: (fn: (() => void) | null) => void;
+  setIsEditing: (val: boolean) => void;
 }
 
 export function Rubric() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setHeaderTitle } = useOutletContext<LayoutContextType>();
+  const { setHeaderTitle, setOnEditCallback, setOnSaveCallback, setOnCancelCallback, setIsEditing } = useOutletContext<LayoutContextType>();
   const { db, userId, teacherEmail, teacherName, isAuthReady } = useFirebase();
 
   const [rubric, setRubric] = useState<IRubric | null>(null);
@@ -29,12 +33,71 @@ export function Rubric() {
   const [error, setError] = useState<string | null>(null);
   const [allAvailableStudents, setAllAvailableStudents] = useState<IStudent[]>([]);
 
-  useEffect(() => {
-    if (rubric?.header.title) {
-      setHeaderTitle(rubric.header.title);
-    } else {
-      setHeaderTitle("");
+  const fetchRubricData = useCallback(async () => {
+    if (!isAuthReady || !db || !userId) return;
+    const rubricId = searchParams.get("id");
+    const isNewParam = searchParams.get("isNew");
+    const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'default-app-id';
+    
+    if (rubricId) {
+      const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubricId);
+      try {
+        const docSnap = await getDoc(rubricDocRef);
+        if (docSnap.exists()) {
+          const fetchedRubric = { id: docSnap.id, ...docSnap.data() } as IRubric;
+          setRubric(fetchedRubric);
+          const isEdit = isNewParam === "true";
+          setEditionMode(isEdit);
+          setIsEditing(isEdit);
+          setLoading(false);
+        }
+      } catch (err) {
+        setError("Failed to load rubric.");
+        setLoading(false);
+      }
     }
+  }, [db, userId, isAuthReady, searchParams, setIsEditing]);
+
+  const handleSaveChanges = async (rubricToSaveParam?: IRubric) => {
+    const currentRubric = rubricToSaveParam || rubric;
+    if (!db || !userId || !currentRubric || !teacherEmail || !teacherName) return;
+    const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'default-app-id';
+    try {
+      const { id, ...restOfRubric } = currentRubric as any; 
+      const finalRubricData = { ...restOfRubric, teacherEmail, teacherName };
+      if (currentRubric.id) {
+        const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, currentRubric.id);
+        await setDoc(rubricDocRef, finalRubricData);
+      } else {
+        const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
+        const newDocRef = doc(rubricsCollectionRef);
+        await setDoc(newDocRef, { ...finalRubricData, id: newDocRef.id });
+        navigate(`/rubric?id=${newDocRef.id}`);
+      }
+      setEditionMode(false);
+      setIsEditing(false);
+    } catch (e) {
+      console.error("Error saving: ", e);
+    }
+  };
+
+  useEffect(() => {
+    setOnEditCallback(() => () => setEditionMode(true));
+    setOnSaveCallback(() => () => handleSaveChanges());
+    setOnCancelCallback(() => () => {
+      setEditionMode(false);
+      fetchRubricData();
+    });
+    return () => {
+      setOnEditCallback(null);
+      setOnSaveCallback(null);
+      setOnCancelCallback(null);
+    };
+  }, [setOnEditCallback, setOnSaveCallback, setOnCancelCallback, handleSaveChanges, fetchRubricData]);
+
+  useEffect(() => {
+    if (rubric?.header.title) setHeaderTitle(rubric.header.title);
+    else setHeaderTitle("");
     return () => setHeaderTitle("");
   }, [rubric?.header.title, setHeaderTitle]);
 
@@ -45,9 +108,7 @@ export function Rubric() {
         const line = tempValidLines[i];
         if (line.categoryName.trim() === '' && line.possibleScores.every(score => score.text.trim() === '')) {
             tempValidLines.pop();
-        } else {
-            break;
-        }
+        } else break;
     }
     setMaxGrade(tempValidLines.length * 25);
     setGradableLineIds(tempValidLines.map(line => line.lineId));
@@ -55,7 +116,7 @@ export function Rubric() {
 
   useEffect(() => {
     if (!isAuthReady || !db || !userId) return;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'default-app-id';
     const studentsCollectionRef = collection(db, `artifacts/${appId}/students`);
     const q = query(studentsCollectionRef);
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -64,9 +125,6 @@ export function Rubric() {
           fetchedStudents.push({ studentDocId: doc.id, ...doc.data() as Omit<IStudent, 'studentDocId'> });
         });
         setAllAvailableStudents(fetchedStudents);
-      }, (err) => {
-        console.error("Erro ao buscar estudantes:", err);
-        setError("Falha ao carregar estudantes.");
       }
     );
     return () => unsubscribe();
@@ -100,41 +158,13 @@ export function Rubric() {
   useEffect(() => {
     if (!isAuthReady || !db || !userId) return;
     const rubricId = searchParams.get("id");
-    const isNewParam = searchParams.get("isNew");
-    const studentEmailParam = searchParams.get("student");
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, rubricId || "new");
-
-    if (rubricId) {
-      const fetchRubric = async () => {
-        try {
-          const docSnap = await getDoc(rubricDocRef);
-          if (docSnap.exists()) {
-            const fetchedRubric = { id: docSnap.id, ...docSnap.data() } as IRubric;
-            setRubric(fetchedRubric);
-            setEditionMode(isNewParam === "true");
-            setLoading(false);
-            if (studentEmailParam && allAvailableStudents.length > 0) {
-                const decodedStudentEmail = atob(studentEmailParam);
-                const studentToSelect = allAvailableStudents.find(s => s.email === decodedStudentEmail);
-                if (studentToSelect) setSelectedStudent(studentToSelect);
-            }
-          } else {
-            initializeNewRubric(teacherEmail, teacherName);
-            setEditionMode(true); 
-          }
-        } catch (err) {
-          console.error("Erro ao buscar rubrica:", err);
-          setError("Falha ao carregar rubrica.");
-          setLoading(false);
-        }
-      };
-      fetchRubric();
-    } else {
+    if (rubricId) fetchRubricData();
+    else {
       initializeNewRubric(teacherEmail, teacherName);
-      setEditionMode(true); 
+      setEditionMode(true);
+      setIsEditing(true);
     }
-  }, [searchParams, db, userId, teacherEmail, teacherName, isAuthReady, initializeNewRubric, allAvailableStudents]);
+  }, [searchParams, db, userId, teacherEmail, teacherName, isAuthReady, initializeNewRubric, fetchRubricData, setIsEditing]);
 
   const handleRubricLineChange = (lineId: string, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => {
     if (!rubric) return;
@@ -144,8 +174,8 @@ export function Rubric() {
         if (field === "categoryName") newLine.categoryName = value;
         else if (field === "scoreText" && scoreIndex !== undefined) {
           const newScores = [...line.possibleScores];
-          newScores[scoreIndex] = { ...newScores[scoreIndex], text: value } as typeof line.possibleScores[number];
-          newLine.possibleScores = newScores as IRubricLine['possibleScores'];
+          newScores[scoreIndex] = { ...newScores[scoreIndex], text: value } as any;
+          newLine.possibleScores = newScores as any;
         }
         return newLine;
       }
@@ -165,40 +195,17 @@ export function Rubric() {
   };
 
   const handleRemoveCategory = async (lineId: string) => {
-    if (!rubric || !db || !userId) return;
-    const removedLineIndex = rubric.rubricLines.findIndex(line => line.lineId === lineId);
-    if (removedLineIndex === -1) return;
+    if (!rubric) return;
     const updatedRubricLines = rubric.rubricLines.filter((line) => line.lineId !== lineId);
-    const updatedStudentRubricGrade = rubric.studentRubricGrade.map(studentGrade => {
-        const newRubricGradesLocation = studentGrade.rubricGradesLocation
-            .filter(grade => grade.categoryIndex !== removedLineIndex)
-            .map(grade => ({
-                categoryIndex: grade.categoryIndex > removedLineIndex ? grade.categoryIndex - 1 : grade.categoryIndex,
-                gradingIndex: grade.gradingIndex,
-            }));
-        const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
-            const line = updatedRubricLines[grade.categoryIndex];
-            if (line && line.possibleScores[grade.gradingIndex] && gradableLineIds.includes(line.lineId)) {
-                return total + line.possibleScores[grade.gradingIndex].score;
-            }
-            return total;
-        }, 0);
-        return { ...studentGrade, rubricGradesLocation: newRubricGradesLocation, currentGrade: newCurrentGrade };
-    });
-    const newRubricState = { ...rubric, rubricLines: updatedRubricLines, studentRubricGrade: updatedStudentRubricGrade };
-    setRubric(newRubricState);
-    await handleSaveChanges(newRubricState);
+    setRubric({ ...rubric, rubricLines: updatedRubricLines });
   };
   
   const handleAssignStudent = async (student: IStudent) => {
     if (!rubric || !db || !userId || !student.email) return;
-    
-    // If student is already assigned, just select them and return
     if (rubric.studentRubricGrade.some(srg => srg.studentEmail === student.email)) {
       setSelectedStudent(student);
       return;
     }
-
     const newStudentGradeEntry: IStudentRubricGrade = { studentEmail: student.email, rubricGradesLocation: [], currentGrade: 0 };
     const updatedStudentRubricGrade = [...rubric.studentRubricGrade, newStudentGradeEntry];
     const newRubricState = { ...rubric, studentRubricGrade: updatedStudentRubricGrade };
@@ -242,33 +249,9 @@ export function Rubric() {
     await handleSaveChanges(newRubricState);
   };
 
-  const handleSaveChanges = async (rubricToSaveParam?: IRubric) => {
-    const currentRubric = rubricToSaveParam || rubric;
-    if (!db || !userId || !currentRubric || !teacherEmail || !teacherName) return;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    try {
-      const { id, ...restOfRubric } = currentRubric; 
-      const finalRubricData = { ...restOfRubric, teacherEmail, teacherName };
-      if (currentRubric.id) {
-        const rubricDocRef = doc(db, `artifacts/${appId}/users/${userId}/rubrics`, currentRubric.id);
-        await setDoc(rubricDocRef, finalRubricData);
-      } else {
-        const rubricsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/rubrics`);
-        const newDocRef = doc(rubricsCollectionRef);
-        await setDoc(newDocRef, { ...finalRubricData, id: newDocRef.id });
-        setRubric(prev => prev ? { ...prev, id: newDocRef.id } : null);
-        navigate(`/rubric?id=${newDocRef.id}`);
-      }
-      setEditionMode(false);
-    } catch (e) {
-      console.error("Erro ao salvar rubrica: ", e);
-      setError("Falha ao salvar rubrica.");
-    }
-  };
-
-  if (loading) return <div className={styles.rubricPage}>Carregando rubrica...</div>;
-  if (error) return <div className={styles.rubricPage} style={{ color: 'red' }}>Erro: {error}</div>;
-  if (!rubric) return <div className={styles.rubricPage}>Nenhum dado de rubrica disponível.</div>;
+  if (loading) return <div className={styles.rubricPage}>Loading...</div>;
+  if (error) return <div className={styles.rubricPage} style={{ color: 'red' }}>Error: {error}</div>;
+  if (!rubric) return <div className={styles.rubricPage}>No data available.</div>;
 
   const selectedStudentGradeInfo = rubric.studentRubricGrade.find((g) => g.studentEmail === selectedStudent?.email);
   const selectedStudentGrades = selectedStudentGradeInfo?.rubricGradesLocation;

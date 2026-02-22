@@ -8,7 +8,7 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { Rubric } from "./pages/Rubric";
 import { Admin } from "./pages/Admin";
-import { RubricFeedback } from "./pages/RubricFeedback"; // Importe o novo componente
+import { RubricFeedback } from "./pages/RubricFeedback";
 import { Layout } from "./components/Layout";
 import { useFirebase } from "./context/FirebaseContext";
 import React, { useState, useEffect } from "react";
@@ -36,7 +36,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthReady && db && userId && teacherEmail) {
       const checkAdminStatus = async () => {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof (window as any).__app_id !== 'undefined' ? (window as any).__app_id : 'default-app-id';
         const adminDocRef = doc(collection(db, `artifacts/${appId}/admins`), teacherEmail);
 
         try {
@@ -71,16 +71,19 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-
 const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
   },
   {
-    // Rota de feedback da rubrica (sem autenticação)
-    path: "/rubricFeedback",
-    element: <RubricFeedback />,
+    element: <Layout />,
+    children: [
+      {
+        path: "/rubricFeedback",
+        element: <RubricFeedback />,
+      },
+    ],
   },
   {
     element: (
