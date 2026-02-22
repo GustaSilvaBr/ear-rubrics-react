@@ -77,13 +77,6 @@ export function StudentList({
 
   return (
     <div className={styles.studentListContainer}>
-      <header className={styles.header}>
-        <h2 className={styles.rubricTitle}>{rubricTitle || "Untitled Rubric"}</h2>
-        <button className={styles.saveBtn} onClick={onSave}>
-          Save Rubric
-        </button>
-      </header>
-
       <div className={styles.searchSection}>
         <label className={styles.label}>Students</label>
         <StudentAutocomplete
