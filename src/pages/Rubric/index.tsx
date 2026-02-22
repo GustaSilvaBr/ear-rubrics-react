@@ -192,7 +192,13 @@ export function Rubric() {
   
   const handleAssignStudent = async (student: IStudent) => {
     if (!rubric || !db || !userId || !student.email) return;
-    if (rubric.studentRubricGrade.some(srg => srg.studentEmail === student.email)) return;
+    
+    // If student is already assigned, just select them and return
+    if (rubric.studentRubricGrade.some(srg => srg.studentEmail === student.email)) {
+      setSelectedStudent(student);
+      return;
+    }
+
     const newStudentGradeEntry: IStudentRubricGrade = { studentEmail: student.email, rubricGradesLocation: [], currentGrade: 0 };
     const updatedStudentRubricGrade = [...rubric.studentRubricGrade, newStudentGradeEntry];
     const newRubricState = { ...rubric, studentRubricGrade: updatedStudentRubricGrade };

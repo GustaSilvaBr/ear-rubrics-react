@@ -1,5 +1,5 @@
 // src/pages/Rubric/StudentList/index.tsx
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { IStudent } from "../../../interfaces/IStudent";
 import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
 import { StudentAutocomplete } from "./StudentAutocomplete";
@@ -23,6 +23,8 @@ interface StudentListProps {
   allAvailableStudents: IStudent[];
   rubricId?: string;
   teacherUid?: string | null;
+  rubricTitle?: string;
+  onSave?: () => void;
 }
 
 export function StudentList({
@@ -35,8 +37,25 @@ export function StudentList({
   onSelectStudent,
   allAvailableStudents,
   rubricId,
-  teacherUid
+  teacherUid,
+  rubricTitle,
+  onSave
 }: StudentListProps) {
+  // Use a map to store refs for each student item
+  const studentRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
+  // Scroll the selected student into view whenever the selection changes
+  useEffect(() => {
+    if (selectedStudent) {
+      const element = studentRefs.current.get(selectedStudent.email);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest', // Ensures it scrolls just enough to be visible
+        });
+      }
+    }
+  }, [selectedStudent]);
 
   const handleShare = (e: React.MouseEvent, studentEmail: string) => {
     e.stopPropagation();
@@ -58,11 +77,21 @@ export function StudentList({
 
   return (
     <div className={styles.studentListContainer}>
-      <h3>Students</h3>
-      <StudentAutocomplete
-        allStudents={allAvailableStudents}
-        onSelect={onAssignStudent}
-      />
+      <header className={styles.header}>
+        <h2 className={styles.rubricTitle}>{rubricTitle || "Untitled Rubric"}</h2>
+        <button className={styles.saveBtn} onClick={onSave}>
+          Save Rubric
+        </button>
+      </header>
+
+      <div className={styles.searchSection}>
+        <label className={styles.label}>Students</label>
+        <StudentAutocomplete
+          allStudents={allAvailableStudents}
+          onSelect={onAssignStudent}
+        />
+      </div>
+
       <ul className={styles.list}>
         {assignedStudents.map((student) => {
           const gradeInfo = studentRubricGrades.find(g => g.studentEmail === student.email);
@@ -71,6 +100,11 @@ export function StudentList({
           return (
             <li
               key={student.email}
+              // Set the ref in our Map
+              ref={(el) => {
+                if (el) studentRefs.current.set(student.email, el);
+                else studentRefs.current.delete(student.email);
+              }}
               className={`${styles.listItem} ${isSelected ? styles.selected : ''}`}
               onClick={() => onSelectStudent(student)}
             >

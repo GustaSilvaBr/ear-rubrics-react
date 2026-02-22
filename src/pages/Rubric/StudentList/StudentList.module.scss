@@ -1,15 +1,54 @@
 // src/pages/Rubric/StudentList/StudentList.module.scss
+
 .studentListContainer {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   height: 100%;
+}
 
-  h3 {
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+
+  .rubricTitle {
     margin: 0;
-    font-size: 1.1rem;
-    color: #1e293b;
+    font-size: 1.25rem;
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .saveBtn {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background-color: #2563eb;
+    }
+  }
+}
+
+.searchSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
   }
 }
 
@@ -18,14 +57,27 @@
   padding: 0;
   margin: 0;
   overflow-y: auto;
-  flex: 1;
+  max-height: 330px;
+  scroll-behavior: smooth; // Adds extra layer of smoothness
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+    &:hover { background: #94a3b8; }
+  }
 
   .listItem {
     display: flex;
     flex-direction: column;
     justify-content: start;
     align-items: start;
-    gap:5px;
+    gap: 5px;
     padding: 0.75rem;
     border-radius: 6px;
     cursor: pointer;
@@ -48,9 +100,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
-      
       .name { font-size: 0.9rem; color: #334155; }
-      .grade { font-size: 0.8rem; color: #64748b; font-weight: 500; }
     }
     
     .actions {
@@ -60,10 +110,14 @@
       gap: 0.5rem;
       opacity: 0.3;
       transition: opacity 0.2s;
-      div{
+      
+      .grade { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+
+      div {
         display: flex;
-        gap:5px;
+        gap: 5px;
       }
+      
       button {
         background: none;
         border: none;
