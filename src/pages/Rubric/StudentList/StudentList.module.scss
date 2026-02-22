@@ -22,8 +22,10 @@
 
   .listItem {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    gap:5px;
     padding: 0.75rem;
     border-radius: 6px;
     cursor: pointer;
@@ -50,13 +52,18 @@
       .name { font-size: 0.9rem; color: #334155; }
       .grade { font-size: 0.8rem; color: #64748b; font-weight: 500; }
     }
-
+    
     .actions {
       display: flex;
+      justify-content: space-between;
+      width: 100%;
       gap: 0.5rem;
       opacity: 0.3;
       transition: opacity 0.2s;
-
+      div{
+        display: flex;
+        gap:5px;
+      }
       button {
         background: none;
         border: none;

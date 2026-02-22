@@ -6,10 +6,10 @@ import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
 const ShareIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"></path>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"></path>
+  </svg>
 );
 
 interface StudentListProps {
@@ -46,7 +46,7 @@ export function StudentList({
     }
     const encodedEmail = btoa(studentEmail);
     const shareableUrl = `${window.location.origin}/rubricFeedback?id=${rubricId}&student=${encodedEmail}&teacherUid=${teacherUid}`;
-    
+
     const el = document.createElement('textarea');
     el.value = shareableUrl;
     document.body.appendChild(el);
@@ -59,9 +59,9 @@ export function StudentList({
   return (
     <div className={styles.studentListContainer}>
       <h3>Students</h3>
-      <StudentAutocomplete 
-        allStudents={allAvailableStudents} 
-        onSelect={onAssignStudent} 
+      <StudentAutocomplete
+        allStudents={allAvailableStudents}
+        onSelect={onAssignStudent}
       />
       <ul className={styles.list}>
         {assignedStudents.map((student) => {
@@ -69,31 +69,34 @@ export function StudentList({
           const isSelected = selectedStudent?.email === student.email;
 
           return (
-            <li 
-              key={student.email} 
+            <li
+              key={student.email}
               className={`${styles.listItem} ${isSelected ? styles.selected : ''}`}
               onClick={() => onSelectStudent(student)}
             >
               <div className={styles.studentInfo}>
                 <span className={styles.name}>{student.name}</span>
-                <span className={styles.grade}>
-                    {gradeInfo ? `${gradeInfo.currentGrade}/${maxGrade}` : `0/${maxGrade}`}
-                </span>
               </div>
+
               <div className={styles.actions}>
-                <button 
-                  className={styles.shareBtn} 
-                  onClick={(e) => handleShare(e, student.email)}
-                  title="Copy link"
-                >
-                  <ShareIcon />
-                </button>
-                <button 
-                  className={styles.removeBtn} 
-                  onClick={(e) => { e.stopPropagation(); onRemoveStudent(student.email); }}
-                >
-                  &times;
-                </button>
+                <span className={styles.grade}>
+                  {gradeInfo ? `${gradeInfo.currentGrade}/${maxGrade}` : `0/${maxGrade}`}
+                </span>
+                <div>
+                  <button
+                    className={styles.shareBtn}
+                    onClick={(e) => handleShare(e, student.email)}
+                    title="Copy link"
+                  >
+                    <ShareIcon />
+                  </button>
+                  <button
+                    className={styles.removeBtn}
+                    onClick={(e) => { e.stopPropagation(); onRemoveStudent(student.email); }}
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
             </li>
           );
