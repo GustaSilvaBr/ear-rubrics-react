@@ -3,8 +3,12 @@
 
 .rubricPage {
   display: grid;
-  grid-template-columns: minmax(auto, 270px) 1fr;
+  grid-template-columns: minmax(auto, 210px) 1fr;
   gap: $spacing-lg;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .rubricContent {
@@ -179,4 +183,19 @@
   display: flex;
   justify-content: flex-end;
   gap: $spacing-sm;
+}
+
+.selectedStudentBanner {
+  display: inline-block;
+  margin-top: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background-color: $secondary-color;
+  border: 1px solid $primary-color;
+  border-radius: $border-radius;
+  font-size: $font-size-base;
+  color: $text-color;
+
+  strong {
+    color: $primary-color;
+  }
 }

@@ -8,7 +8,7 @@
   padding: 0 $spacing-md;
   background-color: lighten($secondary-color, 3%);
   border-left: 1px solid $border-color;
-  max-height: 460px;
+  max-height: calc(100vh - 100px);
 }
 
 .title {
@@ -49,8 +49,7 @@
 
 .studentItem {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: $spacing-xs $spacing-sm;
   background-color: #fff;
   border-radius: $border-radius;
@@ -66,19 +65,29 @@
 }
 
 .studentName {
-  flex-grow: 1;
+  font-weight: $font-weight-bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.studentSecondRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.studentGradeLevel {
+  flex-grow: 1;
+  font-size: 0.8rem;
+  color: lighten($text-color, 30%);
+}
+
 .studentGrade {
-  margin: 0 $spacing-sm;
   font-weight: $font-weight-bold;
   color: $primary-color;
   flex-shrink: 0;
-  min-width: 60px; // Ensures consistent width
-  text-align: center; // Aligns the text
+  font-size: $font-size-base;
 }
 
 .removeButton {
@@ -89,6 +98,7 @@
   cursor: pointer;
   padding: 0 $spacing-xs;
   flex-shrink: 0;
+  line-height: 1;
 
   &:hover {
     color: darken($error-color, 15%);

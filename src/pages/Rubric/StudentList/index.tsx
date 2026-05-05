@@ -75,25 +75,27 @@ export function StudentList({
             const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
 
             return (
-              <div 
+              <div
                 key={student.email}
                 className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
                 onClick={() => onSelectStudent(student)}
               >
-                {/* Exibe o nome do estudante e o nível de ensino com sufixo */}
-                <span className={styles.studentName}>{student.name} - {getGradeLevelWithSuffix(student.gradeLevel)}</span>
-                <span className={styles.studentGrade}>
-                  {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); 
-                    onRemoveStudent(student.email);
-                  }}
-                  className={styles.removeButton}
-                >
-                  &times;
-                </button>
+                <span className={styles.studentName}>{student.name}</span>
+                <div className={styles.studentSecondRow}>
+                  <span className={styles.studentGradeLevel}>{getGradeLevelWithSuffix(student.gradeLevel)}</span>
+                  <span className={styles.studentGrade}>
+                    {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveStudent(student.email);
+                    }}
+                    className={styles.removeButton}
+                  >
+                    &times;
+                  </button>
+                </div>
               </div>
             )
           })
