@@ -194,18 +194,3 @@
   border: 1px solid $success-color;
   font-size: $font-size-base;
 }
-
-.selectedStudentBanner {
-  display: inline-block;
-  margin-top: $spacing-xs;
-  padding: $spacing-xs $spacing-sm;
-  background-color: $secondary-color;
-  border: 1px solid $primary-color;
-  border-radius: $border-radius;
-  font-size: $font-size-base;
-  color: $text-color;
-
-  strong {
-    color: $primary-color;
-  }
-}

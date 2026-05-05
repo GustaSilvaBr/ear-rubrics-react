@@ -134,30 +134,84 @@
 table.rubricTable {
   border-collapse: collapse;
   table-layout: fixed;
-  width: 100%;
-  min-width: 560px;
 }
 
 .categoryHeader {
   @extend %header-base;
-  width: 15%;
+  position: relative;
+  overflow: visible;
 }
 
 .scoreHeader {
   @extend %header-base;
-  width: 20%;
+  position: relative;
+  overflow: visible;
 }
 
 .actionHeader {
   @extend %header-base;
-  width: 40px;
+}
+
+// ── Resize handles ──────────────────────────────────────────────────────
+
+.resizeColHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 2;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    top: 15%;
+    bottom: 15%;
+    width: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  &:hover::after {
+    background: $primary-color;
+  }
+}
+
+.resizeRowHandle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: row-resize;
+  z-index: 2;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    border-radius: 2px;
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  &:hover::after {
+    background: $primary-color;
+  }
 }
 
 td.tableCell {
   border: 1px solid $border-color;
   padding: 0;
   vertical-align: top;
-  height: 130px;
+  position: relative;
+  overflow: visible;
 
   // --- NEW: Add cursor pointer for grading ---
   &.gradingMode {
@@ -200,6 +254,8 @@ td.tableCell {
   }
 }
 
+
+.categoryTd {}
 
 .categoryCell {
   @extend .tableCell;
@@ -259,10 +315,6 @@ textarea.cellInput {
     padding: $spacing-xs;
     font-size: 0.75rem;
     letter-spacing: 0;
-  }
-
-  td.tableCell {
-    height: 100px;
   }
 
   textarea.cellInput {

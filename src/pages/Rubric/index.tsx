@@ -683,12 +683,6 @@ export function Rubric() {
         </header>
         <hr className={styles.divider} />
 
-        {selectedStudent && !editionMode && (
-          <div className={styles.selectedStudentBanner}>
-            Grading: <strong>{selectedStudent.name}</strong>
-          </div>
-        )}
-
         <RubricTable
           columns={rubric.columns ?? DEFAULT_COLUMNS}
           rubricLines={rubric.rubricLines}
