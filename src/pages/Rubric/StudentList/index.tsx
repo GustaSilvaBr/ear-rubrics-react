@@ -12,6 +12,7 @@ interface StudentListProps {
   onAssignStudent: (student: IStudent) => void;
   onRemoveStudent: (studentEmail: string) => void;
   onSelectStudent: (student: IStudent) => void;
+  onSaveNewStudent: (student: Omit<IStudent, "studentDocId">) => Promise<void>;
   allAvailableStudents: IStudent[];
 }
 
@@ -23,6 +24,7 @@ export function StudentList({
   onAssignStudent,
   onRemoveStudent,
   onSelectStudent,
+  onSaveNewStudent,
   allAvailableStudents,
 }: StudentListProps) {
 
@@ -65,6 +67,7 @@ export function StudentList({
       <StudentAutocomplete
         allStudents={allAvailableStudents.filter(s => !s.disabled)}
         onStudentSelect={handleSelectStudent}
+        onSaveNewStudent={onSaveNewStudent}
       />
 
       <div className={styles.assignedList}>
@@ -73,6 +76,7 @@ export function StudentList({
             const isSelected = selectedStudent?.email === student.email;
             const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email);
             const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
+            const bonusPoints = studentGrade?.bonusSelectedIndices?.length ?? 0;
 
             return (
               <div
@@ -84,7 +88,9 @@ export function StudentList({
                 <div className={styles.studentSecondRow}>
                   <span className={styles.studentGradeLevel}>{getGradeLevelWithSuffix(student.gradeLevel)}</span>
                   <span className={styles.studentGrade}>
-                    {currentGrade === 0 ? '-' : `${currentGrade} / ${maxGrade}`}
+                    {currentGrade + bonusPoints === 0
+                      ? '-'
+                      : `${currentGrade + bonusPoints} / ${maxGrade}`}
                   </span>
                   <button
                     onClick={(e) => {

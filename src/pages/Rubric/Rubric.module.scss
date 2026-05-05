@@ -185,6 +185,16 @@
   gap: $spacing-sm;
 }
 
+.bonusPill {
+  font-weight: $font-weight-bold;
+  color: $success-color;
+  background-color: lighten($success-color, 60%);
+  padding: 2px $spacing-sm;
+  border-radius: 12px;
+  border: 1px solid $success-color;
+  font-size: $font-size-base;
+}
+
 .selectedStudentBanner {
   display: inline-block;
   margin-top: $spacing-xs;

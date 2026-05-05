@@ -41,8 +41,128 @@
 .dropdownItem {
   padding: $spacing-sm;
   cursor: pointer;
+  font-size: $font-size-base;
 
   &:hover {
     background-color: $secondary-color;
+  }
+}
+
+.addStudentItem {
+  color: $primary-color;
+  font-weight: $font-weight-bold;
+  border-top: 1px solid $border-color;
+
+  &:hover {
+    background-color: lighten($primary-color, 55%);
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal {
+  background: $background-color;
+  border-radius: $border-radius;
+  padding: $spacing-lg;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 360px;
+}
+
+.modalTitle {
+  margin: 0 0 $spacing-md;
+  font-size: $font-size-large;
+  color: $primary-color;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.label {
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $text-color;
+}
+
+.fieldInput,
+.fieldSelect {
+  padding: $spacing-sm;
+  font-size: $font-size-base;
+  font-family: $font-family-sans;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  background-color: #fff;
+  color: $text-color;
+  box-sizing: border-box;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px lighten($primary-color, 40%);
+  }
+}
+
+.formError {
+  margin: 0;
+  font-size: $font-size-base;
+  color: $error-color;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-xs;
+}
+
+.cancelButton {
+  padding: $spacing-xs $spacing-md;
+  font-size: $font-size-base;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  cursor: pointer;
+  color: $text-color;
+
+  &:hover {
+    background-color: darken($border-color, 5%);
+  }
+}
+
+.saveButton {
+  padding: $spacing-xs $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  background-color: $primary-color;
+  color: #fff;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: darken($primary-color, 10%);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }

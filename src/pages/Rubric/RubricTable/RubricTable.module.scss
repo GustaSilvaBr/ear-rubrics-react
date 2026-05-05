@@ -31,6 +31,77 @@
   z-index: 1;
 }
 
+// Editable header cell in edition mode
+.editableHeader {
+  padding: $spacing-xs $spacing-sm;
+  vertical-align: top;
+}
+
+.headerNameInput {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 3px $spacing-xs;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-sans;
+  color: $text-color;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    background: #fff;
+  }
+}
+
+.scoreInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.headerScoreInput {
+  width: 52px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 3px $spacing-xs;
+  font-size: $font-size-base;
+  font-family: $font-family-sans;
+  color: $primary-color;
+  font-weight: $font-weight-bold;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    background: #fff;
+  }
+
+  // hide number spinners
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+}
+
+.scoreUnit {
+  font-size: 0.75rem;
+  color: lighten($text-color, 30%);
+  font-weight: $font-weight-normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 // 3. Add sticky properties to the footer row
 .addCategoryRow {
   padding: 0;

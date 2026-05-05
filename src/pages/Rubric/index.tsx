@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, deleteDoc, collection, query, onSnapshot } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
-import type { IRubric, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
+import type { IRubric, IRubricColumn, IBonusColumn, IRubricLine, IStudentRubricGrade } from "../../interfaces/IRubric";
 import type { IStudent } from "../../interfaces/IStudent";
 import { RubricTable } from "./RubricTable";
+import { BonusTable } from "./BonusTable";
 import { StudentList } from "./StudentList";
 import { DropdownMenu } from "../../components/DropdownMenu";
 import styles from "./Rubric.module.scss";
@@ -24,6 +25,19 @@ const OptionsIcon = () => (
         <circle cx="5" cy="12" r="1"></circle>
     </svg>
 );
+
+const DEFAULT_COLUMNS: IRubricColumn[] = [
+  { name: "Excellent",         score: 25 },
+  { name: "Good",              score: 20 },
+  { name: "Average",           score: 15 },
+  { name: "Needs Improvement", score: 10 },
+];
+
+const DEFAULT_BONUS_COLUMNS: IBonusColumn[] = [
+  { name: "Participation" },
+  { name: "Effort" },
+  { name: "Creativity" },
+];
 
 export function Rubric() {
   const [searchParams] = useSearchParams();
@@ -83,9 +97,12 @@ export function Rubric() {
         }
     }
 
-    setMaxGrade(tempValidLines.length * 25);
+    const maxColScore = rubric.columns?.length
+      ? Math.max(...rubric.columns.map(c => c.score))
+      : 25;
+    setMaxGrade(tempValidLines.length * maxColScore);
     setGradableLineIds(tempValidLines.map(line => line.lineId));
-  }, [rubric?.rubricLines]);
+  }, [rubric?.rubricLines, rubric?.columns]);
 
   // Efeito para carregar todos os estudantes disponíveis do Firestore (para autocomplete e derivação)
   useEffect(() => {
@@ -143,12 +160,14 @@ export function Rubric() {
       teacherEmail: currentTeacherEmail || "unknown",
       teacherName: currentTeacherName || "Unknown Teacher",
       studentRubricGrade: [],
+      columns: DEFAULT_COLUMNS,
+      bonusColumns: DEFAULT_BONUS_COLUMNS,
       header: {
-        title: "Untitled Rubric", // Título padrão em inglês
+        title: "Untitled Rubric",
         gradeLevels: [],
       },
       rubricLines: [
-        { lineId: generateLineId(), categoryName: "", possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ] }
+        { lineId: generateLineId(), categoryName: "", possibleScores: DEFAULT_COLUMNS.map(c => ({ score: c.score, text: "" })) }
       ],
     };
     setRubric(newRubric);
@@ -172,7 +191,13 @@ export function Rubric() {
         try {
           const docSnap = await getDoc(rubricDocRef);
           if (docSnap.exists()) {
-            const fetchedRubric = { id: docSnap.id, ...docSnap.data() } as IRubric;
+            const raw = { id: docSnap.id, ...docSnap.data() } as IRubric;
+            // Backward compat: add defaults for fields added after initial release
+            const fetchedRubric: IRubric = {
+              ...raw,
+              columns: raw.columns?.length ? raw.columns : DEFAULT_COLUMNS,
+              bonusColumns: raw.bonusColumns?.length ? raw.bonusColumns : DEFAULT_BONUS_COLUMNS,
+            };
             setRubric(fetchedRubric);
             setEditionMode(isNewParam === "true");
             setLoading(false);
@@ -229,8 +254,8 @@ export function Rubric() {
           newLine.categoryName = value;
         } else if (field === "scoreText" && scoreIndex !== undefined) {
           const newScores = [...line.possibleScores];
-          newScores[scoreIndex] = { ...newScores[scoreIndex], text: value } as typeof line.possibleScores[number];
-          newLine.possibleScores = newScores as IRubricLine['possibleScores'];
+          newScores[scoreIndex] = { ...newScores[scoreIndex], text: value };
+          newLine.possibleScores = newScores;
         }
         return newLine;
       }
@@ -245,9 +270,63 @@ export function Rubric() {
     const newCategory: IRubricLine = {
       lineId: generateLineId(),
       categoryName: "",
-      possibleScores: [ { score: 25, text: "" }, { score: 20, text: "" }, { score: 15, text: "" }, { score: 10, text: "" } ]
+      possibleScores: rubric.columns.map(c => ({ score: c.score, text: "" })),
     };
     setRubric({ ...rubric, rubricLines: [...rubric.rubricLines, newCategory] });
+  };
+
+  const handleColumnChange = (colIndex: number, field: "name" | "score", value: string) => {
+    if (!rubric) return;
+    const newScore = field === "score" ? (Number(value) || 0) : null;
+    const updatedColumns = rubric.columns.map((col, i) =>
+      i === colIndex
+        ? { ...col, [field]: newScore !== null ? newScore : value }
+        : col
+    );
+    // Propagate score change to every row's possibleScores
+    const updatedLines = newScore !== null
+      ? rubric.rubricLines.map(line => {
+          const newScores = line.possibleScores.map((s, i) =>
+            i === colIndex ? { ...s, score: newScore } : s
+          );
+          return { ...line, possibleScores: newScores };
+        })
+      : rubric.rubricLines;
+    // Recalculate every student's currentGrade
+    const updatedGrades = rubric.studentRubricGrade.map(sg => {
+      const currentGrade = sg.rubricGradesLocation.reduce((total, g) => {
+        const line = updatedLines[g.categoryIndex];
+        if (line?.possibleScores[g.gradingIndex]) {
+          return total + line.possibleScores[g.gradingIndex].score;
+        }
+        return total;
+      }, 0);
+      return { ...sg, currentGrade };
+    });
+    setRubric({ ...rubric, columns: updatedColumns, rubricLines: updatedLines, studentRubricGrade: updatedGrades });
+  };
+
+  const handleBonusToggle = async (colIndex: number) => {
+    if (!rubric || !selectedStudent) return;
+    const updatedGrades = rubric.studentRubricGrade.map(sg => {
+      if (sg.studentEmail !== selectedStudent.email) return sg;
+      const current = sg.bonusSelectedIndices ?? [];
+      const bonusSelectedIndices = current.includes(colIndex)
+        ? current.filter(i => i !== colIndex)
+        : [...current, colIndex];
+      return { ...sg, bonusSelectedIndices };
+    });
+    const newRubricState = { ...rubric, studentRubricGrade: updatedGrades };
+    setRubric(newRubricState);
+    await handleSaveChanges(newRubricState);
+  };
+
+  const handleBonusColumnNameChange = (colIndex: number, name: string) => {
+    if (!rubric) return;
+    const bonusColumns = (rubric.bonusColumns ?? DEFAULT_BONUS_COLUMNS).map((col, i) =>
+      i === colIndex ? { ...col, name } : col
+    );
+    setRubric({ ...rubric, bonusColumns });
   };
 
   const handleRemoveCategory = async (lineId: string) => {
@@ -392,6 +471,15 @@ export function Rubric() {
     await handleSaveChanges(newRubricState);
   };
 
+  const handleSaveNewStudent = async (studentData: Omit<IStudent, "studentDocId">) => {
+    if (!db) throw new Error("Database not available");
+    const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+    const studentDocRef = doc(db, `artifacts/${appId}/students`, studentData.email);
+    const newStudent: IStudent = { ...studentData, studentDocId: studentData.email };
+    await setDoc(studentDocRef, newStudent);
+    await handleAssignStudent(newStudent);
+  };
+
   const handleEdit = () => {
     setOriginalRubric(rubric);
     setEditionMode(true);
@@ -523,6 +611,7 @@ export function Rubric() {
           onAssignStudent={handleAssignStudent}
           onRemoveStudent={handleRemoveStudent}
           onSelectStudent={setSelectedStudent}
+          onSaveNewStudent={handleSaveNewStudent}
           allAvailableStudents={allAvailableStudents}
         />
       </div>
@@ -539,11 +628,21 @@ export function Rubric() {
             />
             {selectedStudent && selectedStudentGradeInfo && !editionMode && (
               <div className={styles.gradingStudentInfo}>
-              {/* Exibe o nome do estudante e o nível de ensino com sufixo */}
-              {selectedStudent.name} - {getGradeLevelWithSuffix(selectedStudent.gradeLevel)}: {" "}
+                {selectedStudent.name} - {getGradeLevelWithSuffix(selectedStudent.gradeLevel)}:{" "}
                 <span className={styles.gradePill}>
-                  <strong>{selectedStudentGradeInfo.currentGrade === 0 ? '-' : `${selectedStudentGradeInfo.currentGrade} / ${maxGrade}`}</strong>
+                  <strong>
+                    {(() => {
+                      const bonus = selectedStudentGradeInfo.bonusSelectedIndices?.length ?? 0;
+                      const total = selectedStudentGradeInfo.currentGrade + bonus;
+                      return total === 0 ? "-" : `${total} / ${maxGrade}`;
+                    })()}
+                  </strong>
                 </span>
+                {(selectedStudentGradeInfo.bonusSelectedIndices?.length ?? 0) > 0 && (
+                  <span className={styles.bonusPill}>
+                    +{selectedStudentGradeInfo.bonusSelectedIndices!.length} added
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -591,6 +690,7 @@ export function Rubric() {
         )}
 
         <RubricTable
+          columns={rubric.columns ?? DEFAULT_COLUMNS}
           rubricLines={rubric.rubricLines}
           selectedStudentGrades={selectedStudentGrades}
           editionMode={editionMode}
@@ -598,7 +698,17 @@ export function Rubric() {
           onRemoveCategory={handleRemoveCategory}
           onGradeSelect={handleGradeSelect}
           onRubricLineChange={handleRubricLineChange}
+          onColumnChange={handleColumnChange}
           gradableLineIds={gradableLineIds}
+        />
+
+        <BonusTable
+          bonusColumns={rubric.bonusColumns ?? DEFAULT_BONUS_COLUMNS}
+          selectedIndices={selectedStudentGradeInfo?.bonusSelectedIndices ?? []}
+          editionMode={editionMode}
+          hasStudentSelected={!!selectedStudent}
+          onToggle={handleBonusToggle}
+          onColumnNameChange={handleBonusColumnNameChange}
         />
       </div>
       

@@ -1,19 +1,22 @@
 // src/pages/Rubric/RubricTable/index.tsx
-import type { IRubricLine, IStudentRubricGrade } from "../../../interfaces/IRubric";
+import type { IRubricColumn, IRubricLine, IStudentRubricGrade } from "../../../interfaces/IRubric";
 import styles from "./RubricTable.module.scss";
 
 interface RubricTableProps {
+  columns: IRubricColumn[];
   rubricLines: IRubricLine[];
   selectedStudentGrades?: IStudentRubricGrade['rubricGradesLocation'];
   editionMode: boolean;
   onAddCategory: () => void;
-  onRemoveCategory: (lineId: string) => void; // DEVE SER 'string' (minúsculo)
+  onRemoveCategory: (lineId: string) => void;
   onGradeSelect: (categoryIndex: number, gradingIndex: number) => void;
-  onRubricLineChange: (lineId: string, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => void; // DEVE SER 'string' (minúsculo)
-  gradableLineIds: string[]; // DEVE SER 'string[]' (minúsculo)
+  onRubricLineChange: (lineId: string, field: "categoryName" | "scoreText", value: string, scoreIndex?: number) => void;
+  onColumnChange: (colIndex: number, field: "name" | "score", value: string) => void;
+  gradableLineIds: string[];
 }
 
 export function RubricTable({
+  columns,
   rubricLines,
   selectedStudentGrades = [],
   editionMode,
@@ -21,6 +24,7 @@ export function RubricTable({
   onRemoveCategory,
   onGradeSelect,
   onRubricLineChange,
+  onColumnChange,
   gradableLineIds,
 }: RubricTableProps) {
   return (
@@ -29,10 +33,32 @@ export function RubricTable({
         <thead>
           <tr>
             <th className={styles.categoryHeader}>Category</th>
-            <th className={styles.scoreHeader}>Excellent (25)</th>
-            <th className={styles.scoreHeader}>Good (20)</th>
-            <th className={styles.scoreHeader}>Average (15)</th>
-            <th className={styles.scoreHeader}>Needs Improvement (10)</th>
+            {columns.map((col, i) =>
+              editionMode ? (
+                <th key={i} className={`${styles.scoreHeader} ${styles.editableHeader}`}>
+                  <input
+                    className={styles.headerNameInput}
+                    value={col.name}
+                    onChange={(e) => onColumnChange(i, "name", e.target.value)}
+                    placeholder="Column name"
+                  />
+                  <div className={styles.scoreInputWrapper}>
+                    <input
+                      className={styles.headerScoreInput}
+                      type="number"
+                      min={0}
+                      value={col.score}
+                      onChange={(e) => onColumnChange(i, "score", e.target.value)}
+                    />
+                    <span className={styles.scoreUnit}>pts</span>
+                  </div>
+                </th>
+              ) : (
+                <th key={i} className={styles.scoreHeader}>
+                  {col.name} ({col.score})
+                </th>
+              )
+            )}
             <th className={styles.actionHeader}></th>
           </tr>
         </thead>
@@ -55,8 +81,8 @@ export function RubricTable({
                     g => g.categoryIndex === categoryIndex && g.gradingIndex === gradingIndex
                   );
                   return (
-                    <td 
-                      key={gradingIndex} 
+                    <td
+                      key={gradingIndex}
                       className={`${styles.tableCell} ${isSelected ? styles.selected : ''} ${!editionMode ? styles.gradingMode : styles.editingMode} ${!isLineGradable && !editionMode ? styles.disabledForGrading : ''}`}
                       onClick={() => {
                         if (isLineGradable && !editionMode) {
@@ -72,7 +98,7 @@ export function RubricTable({
                         readOnly={!editionMode}
                       />
                     </td>
-                  )
+                  );
                 })}
                 <td className={styles.actionCell}>
                   {editionMode && (
@@ -85,13 +111,13 @@ export function RubricTable({
                   )}
                 </td>
               </tr>
-            )
+            );
           })}
         </tbody>
         {editionMode && (
           <tfoot>
             <tr>
-              <td colSpan={6} className={styles.addCategoryRow}>
+              <td colSpan={columns.length + 2} className={styles.addCategoryRow}>
                 <button onClick={onAddCategory} className={styles.addButton}>
                   + Add Category
                 </button>

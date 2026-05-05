@@ -1,43 +1,38 @@
+export interface IRubricColumn {
+    name: string;
+    score: number;
+}
+
+export interface IBonusColumn {
+    name: string;
+}
+
 export interface IRubricLine {
-    lineId: string, // DEVE SER 'string' (minúsculo)
-    categoryName: string, // DEVE SER 'string' (minúsculo)
-    possibleScores: [
-        {
-            score: 25,
-            text: string, // DEVE SER 'string' (minúsculo)
-        },
-        {
-            score: 20,
-            text: string, // DEVE SER 'string' (minúsculo)
-        },
-        {
-            score: 15,
-            text: string, // DEVE SER 'string' (minúsculo)
-        },
-        {
-            score: 10,
-            text: string, // DEVE SER 'string' (minúsculo)
-        }
-    ]
+    lineId: string;
+    categoryName: string;
+    possibleScores: { score: number; text: string }[];
 }
 
 export interface IStudentRubricGrade{
-    studentEmail: string, // DEVE SER 'string' (minúsculo)
+    studentEmail: string;
     rubricGradesLocation : {
         categoryIndex: number,
         gradingIndex: number,
-    }[],
-    currentGrade: number,
+    }[];
+    currentGrade: number;
+    bonusSelectedIndices?: number[];
 }
 
 export interface IRubric{
     id?: string;
-    teacherEmail: string; // DEVE SER 'string' (minúsculo)
-    teacherName: string;  // DEVE SER 'string' (minúsculo)
+    teacherEmail: string;
+    teacherName: string;
     studentRubricGrade: IStudentRubricGrade[];
     rubricLines: IRubricLine[];
+    columns: IRubricColumn[];
+    bonusColumns?: IBonusColumn[];
     header:{
-        title: string, // DEVE SER 'string' (minúsculo)
-        gradeLevels:string[], // DEVE SER 'string[]' (minúsculo)
+        title: string;
+        gradeLevels: string[];
     }
 }
