@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { collection, query, onSnapshot, addDoc } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
-import type { IRubric, IRubricLine } from "../../interfaces/IRubric";
+import type { IRubric, IRubricColumn, IRubricLine } from "../../interfaces/IRubric";
 import styles from "./Home.module.scss";
 
 // Interface para a listagem simplificada da rubrica na Home
@@ -85,14 +85,23 @@ export function Home() {
       ];
 
       // Criar um objeto de rubrica com valores padrão e as linhas pré-preenchidas
+      const defaultColumns: IRubricColumn[] = [
+        { name: "Excellent",         score: 25 },
+        { name: "Good",              score: 20 },
+        { name: "Average",           score: 15 },
+        { name: "Needs Improvement", score: 10 },
+      ];
+
       const newRubricData: Omit<IRubric, 'id'> = {
         teacherEmail: teacherEmail,
         teacherName: teacherName,
         studentRubricGrade: [],
-        rubricLines: prefilledRubricLines, // Usa as linhas pré-preenchidas
+        rubricLines: prefilledRubricLines,
+        columns: defaultColumns,
+        bonusColumns: [{ name: "Participation" }, { name: "Effort" }, { name: "Creativity" }],
         header: {
-          title: "Untitled Rubric", // Título padrão em inglês
-          gradeLevels: [], // Pode ser vazio ou preenchido com padrões se desejar
+          title: "Untitled Rubric",
+          gradeLevels: [],
         },
       };
 

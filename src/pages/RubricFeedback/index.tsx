@@ -188,13 +188,20 @@ export function RubricFeedback() {
       <hr className={styles.divider} />
 
       <RubricTable
+        columns={rubric.columns ?? [
+          { name: "Excellent", score: 25 },
+          { name: "Good", score: 20 },
+          { name: "Average", score: 15 },
+          { name: "Needs Improvement", score: 10 },
+        ]}
         rubricLines={rubric.rubricLines}
         selectedStudentGrades={selectedStudentGradesLocation}
-        editionMode={false} // Sempre em modo de visualização
-        onAddCategory={() => {}} // Funções vazias, pois não há edição
+        editionMode={false}
+        onAddCategory={() => {}}
         onRemoveCategory={() => {}}
         onGradeSelect={() => {}}
         onRubricLineChange={() => {}}
+        onColumnChange={() => {}}
         gradableLineIds={gradableLineIds}
       />
     </div>

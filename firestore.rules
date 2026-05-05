@@ -2,8 +2,28 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    match /artifacts/{appId} {
+
+      // Rubrics: any authenticated teacher can write only their own.
+      // Public read is needed for the unauthenticated RubricFeedback page.
+      match /users/{userId}/rubrics/{rubricId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Students: only authenticated @ear.com.br accounts can read or write.
+      match /students/{studentId} {
+        allow read, write: if request.auth != null
+          && request.auth.token.email.matches('.*@ear\\.com\\.br');
+      }
+
+      // Admins: @ear.com.br users can read to check their own status.
+      // No client can write — manage this from the Firebase console only.
+      match /admins/{email} {
+        allow read: if request.auth != null
+          && request.auth.token.email.matches('.*@ear\\.com\\.br');
+        allow write: if false;
+      }
     }
   }
 }
