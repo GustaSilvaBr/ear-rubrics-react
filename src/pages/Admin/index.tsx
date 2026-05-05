@@ -1,6 +1,6 @@
 // src/pages/Admin/index.tsx
 import { useState, useEffect, type ChangeEvent } from "react";
-import { collection, query, onSnapshot, doc, setDoc } from "firebase/firestore";
+import { collection, query, onSnapshot, doc, setDoc, updateDoc } from "firebase/firestore";
 import Papa from "papaparse";
 import { useFirebase } from "../../context/FirebaseContext";
 import type { IStudent } from "../../interfaces/IStudent";
@@ -15,24 +15,18 @@ export function Admin() {
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [studentsError, setStudentsError] = useState<string | null>(null);
 
-  // Efeito para carregar a lista de estudantes do Firestore
   useEffect(() => {
-    if (!isAuthReady || !db || !userId) {
-      return;
-    }
+    if (!isAuthReady || !db || !userId) return;
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    // Acessa a coleção de estudantes no nível público
     const studentsCollectionRef = collection(db, `artifacts/${appId}/students`);
-    const q = query(studentsCollectionRef);
 
     const unsubscribe = onSnapshot(
-      q,
+      query(studentsCollectionRef),
       (snapshot) => {
         const fetchedStudents: IStudent[] = [];
-        snapshot.forEach((doc) => {
-          // Mapear doc.id para studentDocId e garantir que os dados são do tipo correto
-          fetchedStudents.push({ studentDocId: doc.id, ...doc.data() as Omit<IStudent, 'studentDocId'> });
+        snapshot.forEach((d) => {
+          fetchedStudents.push({ studentDocId: d.id, ...d.data() as Omit<IStudent, 'studentDocId'> });
         });
         setStudents(fetchedStudents);
         setLoadingStudents(false);
@@ -44,7 +38,7 @@ export function Admin() {
       }
     );
 
-    return () => unsubscribe(); // Limpeza do listener
+    return () => unsubscribe();
   }, [db, userId, isAuthReady]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +66,7 @@ export function Admin() {
     const studentsCollectionRef = collection(db, `artifacts/${appId}/students`);
 
     Papa.parse(file, {
-      header: true, // Assume que a primeira linha contém os cabeçalhos
+      header: true,
       skipEmptyLines: true,
       complete: async (results) => {
         const studentsToImport: IStudent[] = [];
@@ -80,22 +74,15 @@ export function Admin() {
         let importErrorCount = 0;
 
         for (const row of results.data) {
-          const email = String((row as any).email || '').trim(); // O email será o ID do documento
+          const email = String((row as any).email || '').trim();
           const name = String((row as any).full_name || 'N/A').trim();
           const studentId = String((row as any).student_id || `temp-${Date.now()}-${Math.random().toString(36).substring(7)}`).trim();
           const gradeLevel = String((row as any).grade_level || 'N/A').trim();
 
-          // Validação básica: email é obrigatório para ser a chave primária
           if (email && name && gradeLevel) {
-            studentsToImport.push({
-              studentDocId: email, // O email será o ID do documento Firestore
-              name: name,
-              studentId: studentId,
-              email: email,
-              gradeLevel: gradeLevel,
-            });
+            studentsToImport.push({ studentDocId: email, name, studentId, email, gradeLevel });
           } else {
-            console.warn("Pulando linha devido a dados obrigatórios ausentes (email, full_name, ou grade_level):", row);
+            console.warn("Pulando linha devido a dados obrigatórios ausentes:", row);
             importErrorCount++;
           }
         }
@@ -106,27 +93,23 @@ export function Admin() {
           return;
         }
 
-        // Adiciona/Atualiza os estudantes no Firestore usando o email como ID do documento
         for (const student of studentsToImport) {
           try {
-            // Usa setDoc com o email como ID do documento para upsert
             const studentDocRef = doc(studentsCollectionRef, student.email);
-            // Omitimos studentDocId do objeto de dados, pois ele já é o ID do documento
             const { studentDocId, ...dataToSave } = student;
             await setDoc(studentDocRef, dataToSave);
             importSuccessCount++;
           } catch (error) {
-            console.error("Erro ao adicionar/atualizar estudante no Firestore:", student, error);
+            console.error("Erro ao adicionar/atualizar estudante:", student, error);
             importErrorCount++;
           }
         }
 
-        setImportMessage(`Importação finalizada. ${importSuccessCount} estudantes importados com sucesso. ${importErrorCount} estudantes falharam na importação.`);
+        setImportMessage(`Importação finalizada. ${importSuccessCount} importados com sucesso. ${importErrorCount} falharam.`);
         setImporting(false);
-        setFile(null); // Limpa o arquivo selecionado
-        if (document.getElementById('csvFileInput')) {
-            (document.getElementById('csvFileInput') as HTMLInputElement).value = ''; // Limpa o input file
-        }
+        setFile(null);
+        const csvInput = document.getElementById('csvFileInput') as HTMLInputElement | null;
+        if (csvInput) csvInput.value = '';
       },
       error: (err) => {
         console.error("Erro de parseamento CSV:", err);
@@ -136,27 +119,40 @@ export function Admin() {
     });
   };
 
-  // Função auxiliar para adicionar sufixos ao nível de ensino
+  const handleDisableStudent = async (studentEmail: string) => {
+    if (!db) return;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const studentDocRef = doc(db, `artifacts/${appId}/students`, studentEmail);
+    await updateDoc(studentDocRef, { disabled: true });
+  };
+
+  const handlePromoteAll = async () => {
+    if (!db) return;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const activeStudents = students.filter(s => !s.disabled);
+    await Promise.all(
+      activeStudents.map(s => {
+        const num = parseInt(s.gradeLevel);
+        const studentDocRef = doc(db, `artifacts/${appId}/students`, s.email);
+        if (num >= 12) {
+          return updateDoc(studentDocRef, { disabled: true });
+        }
+        return updateDoc(studentDocRef, { gradeLevel: `${num + 1}th` });
+      })
+    );
+  };
+
   const getGradeLevelWithSuffix = (gradeLevel: string): string => {
     const num = parseInt(gradeLevel);
-    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
-
+    if (isNaN(num)) return gradeLevel;
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
-
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-      return `${gradeLevel}th`;
-    }
-
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) return `${num}th`;
     switch (lastDigit) {
-      case 1:
-        return `${gradeLevel}st`;
-      case 2:
-        return `${gradeLevel}nd`;
-      case 3:
-        return `${gradeLevel}rd`;
-      default:
-        return `${gradeLevel}th`;
+      case 1: return `${num}st`;
+      case 2: return `${num}nd`;
+      case 3: return `${num}rd`;
+      default: return `${num}th`;
     }
   };
 
@@ -189,7 +185,16 @@ export function Admin() {
       </section>
 
       <section className={styles.studentListSection}>
-        <h2>Estudantes Atuais</h2>
+        <div className={styles.sectionHeader}>
+          <h2>Estudantes Atuais</h2>
+          <button
+            onClick={handlePromoteAll}
+            disabled={!db || students.filter(s => !s.disabled).length === 0}
+            className={styles.promoteButton}
+          >
+            Promover Todos
+          </button>
+        </div>
         {loadingStudents ? (
           <p>Carregando estudantes...</p>
         ) : studentsError ? (
@@ -201,19 +206,37 @@ export function Admin() {
             <table className={styles.studentTable}>
               <thead>
                 <tr>
-                  <th>Email</th>
                   <th>Nome Completo</th>
+                  <th>Email</th>
                   <th>Nível de Ensino</th>
                   <th>ID do Estudante</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student.studentDocId}>
-                    <td>{student.email}</td>
+                  <tr key={student.studentDocId} className={student.disabled ? styles.disabledRow : ''}>
                     <td>{student.name}</td>
-                    <td>{getGradeLevelWithSuffix(student.gradeLevel)}</td> {/* Aplicando a função aqui */}
+                    <td>{student.email}</td>
+                    <td>{getGradeLevelWithSuffix(student.gradeLevel)}</td>
                     <td>{student.studentId}</td>
+                    <td>
+                      {student.disabled
+                        ? <span className={styles.disabledBadge}>Desativado</span>
+                        : <span className={styles.activeBadge}>Ativo</span>
+                      }
+                    </td>
+                    <td>
+                      {!student.disabled && (
+                        <button
+                          onClick={() => handleDisableStudent(student.email)}
+                          className={styles.disableButton}
+                        >
+                          Desativar
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

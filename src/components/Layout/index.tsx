@@ -1,11 +1,12 @@
 // src/components/Layout/index.tsx
+import { useState, useEffect } from "react";
 import { Outlet, useNavigate, Link } from "react-router-dom";
-import { useState } from "react";
+import { doc, collection, getDoc } from "firebase/firestore";
 import { signOut } from "../../auth";
 import { useFirebase } from "../../context/FirebaseContext";
-import { DropdownMenu } from "../DropdownMenu";
 import styles from "./Layout.module.scss";
 
+// A simple book icon for the application brand
 const AppIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -23,123 +24,55 @@ const AppIcon = () => (
   </svg>
 );
 
-const MoreIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="1" />
-    <circle cx="12" cy="5" r="1" />
-    <circle cx="12" cy="19" r="1" />
-  </svg>
-);
-
 export function Layout() {
   const navigate = useNavigate();
-  const { auth, isAuthReady } = useFirebase();
-  const [headerTitle, setHeaderTitle] = useState<string>("");
-  
-  // States for dynamic header actions
-  const [onEditCallback, setOnEditCallback] = useState<(() => void) | null>(null);
-  const [onSaveCallback, setOnSaveCallback] = useState<(() => void) | null>(null);
-  const [onCancelCallback, setOnCancelCallback] = useState<(() => void) | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const { db, auth, userId, teacherEmail, isAuthReady } = useFirebase();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthReady || !db || !userId || !teacherEmail) return;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    getDoc(doc(collection(db, `artifacts/${appId}/admins`), teacherEmail)).then((snap) => {
+      setIsAdmin(snap.exists());
+    });
+  }, [db, userId, teacherEmail, isAuthReady]);
 
   const handleSignOut = async () => {
-    if (!auth) return;
+    if (!auth) { // Garante que a instância auth está disponível
+      console.error("Firebase Auth not initialized.");
+      return;
+    }
     try {
-      await signOut(auth);
+      await signOut(auth); // <--- AQUI: Passa a instância 'auth'
       navigate("/login");
     } catch (error) {
       console.error("Failed to sign out:", error);
-    }
-  };
-
-  const triggerEdit = () => {
-    if (onEditCallback) {
-      onEditCallback();
-      setIsEditing(true);
-    }
-  };
-
-  const triggerSave = () => {
-    if (onSaveCallback) {
-      onSaveCallback();
-      setIsEditing(false);
-    }
-  };
-
-  const triggerCancel = () => {
-    if (onCancelCallback) {
-      onCancelCallback();
-      setIsEditing(false);
+      // Você pode adicionar um tratamento de erro na UI aqui, se necessário
     }
   };
 
   return (
     <div className={styles.appContainer}>
       <nav className={styles.navbar}>
-        <div className={styles.navLeft}>
-          <Link to="/" className={styles.navBrand}>
-            <AppIcon />
-            <span className={styles.brandText}>EAR Rubrics</span>
-          </Link>
-        </div>
-
-        <div className={styles.navCenter}>
-          {headerTitle && <h1 className={styles.headerTitle}>{headerTitle}</h1>}
-        </div>
-
-        <div className={styles.navRight}>
-          <div className={styles.headerActions}>
-            {isEditing && (
-              <>
-                <button onClick={triggerCancel} className={styles.cancelButton}>
-                  Cancel
-                </button>
-                <button onClick={triggerSave} className={styles.saveButtonHeader}>
-                  Save Changes
-                </button>
-              </>
+        <Link to="/" className={styles.navBrand}>
+          <AppIcon />
+          <span>EAR Rubrics</span>
+        </Link>
+        {isAuthReady && auth?.currentUser && (
+          <div className={styles.navActions}>
+            {isAdmin && (
+              <Link to="/admin" className={styles.adminLink}>
+                Admin
+              </Link>
             )}
-            
-            {isAuthReady && auth?.currentUser && (
-              <DropdownMenu
-                trigger={
-                  <button className={styles.menuTrigger} aria-label="More options">
-                    <MoreIcon />
-                  </button>
-                }
-              >
-                {!isEditing && onEditCallback && (
-                  <button onClick={triggerEdit}>Edit Rubric</button>
-                )}
-                <button onClick={() => console.log("Delete Rubric")}>Delete Rubric</button>
-                <button onClick={handleSignOut} className={styles.signOutOption}>
-                  Sign Out
-                </button>
-              </DropdownMenu>
-            )}
+            <button onClick={handleSignOut} className={styles.signOutButton}>
+              Sign Out
+            </button>
           </div>
-        </div>
+        )}
       </nav>
       <main className={styles.content}>
-        <Outlet 
-          context={{ 
-            setHeaderTitle, 
-            setOnEditCallback, 
-            setOnSaveCallback, 
-            setOnCancelCallback,
-            setIsEditing // Allow pages to force the UI state (e.g., on new rubric)
-          }} 
-        />
+        <Outlet />
       </main>
     </div>
   );

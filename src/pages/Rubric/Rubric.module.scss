@@ -2,64 +2,181 @@
 @import "../../styles/variables";
 
 .rubricPage {
-  display: flex;
-  // Use calc to account for the navbar height (60px)
-  height: calc(100vh - 60px); 
-  gap: $spacing-md;
-  overflow: hidden;
-  background-color: $background-color;
-}
-
-.studentListSidebar {
-  width: 280px;
-  flex-shrink: 0;
-  background-color: #ffffff;
-  border-right: 1px solid $border-color;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(auto, 270px) 1fr;
+  gap: $spacing-lg;
 }
 
 .rubricContent {
-  flex-grow: 1;
-  // Allow the content to take up to 90% of the viewport height before internal scrolling
-  max-height: 90vh; 
-  overflow-y: auto;
-  padding: $spacing-md;
+  min-width: 0;
+}
+
+.studentListSidebar {
+  // Styles for the sidebar
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.headerContent {
   display: flex;
   flex-direction: column;
-  
-  // Custom scrollbar styling for a cleaner look
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
+  gap: $spacing-xs;
+  flex-grow: 1; 
+  min-width: 0;
+}
+
+.titleInput {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: $primary-color;
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  font-family: $font-family-sans;
+  padding: $spacing-xs 0;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid $primary-color;
   }
 }
 
-.saveActions {
+.divider {
+  border: none;
+  border-top: 1px solid $border-color;
+  margin-top: 0;
+}
+
+.headerActions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: $spacing-md;
-  padding: $spacing-sm 0;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+%action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer; // Adicionado cursor pointer
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  padding: $spacing-xs;
+  height: 28px;
+  width: 28px;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.5;
+  }
+}
+
+.shareButton {
+  @extend %action-button;
+  background-color: $success-color;
+  color: #fff;
+
+  &:hover {
+    background-color: darken($success-color, 10%);
+  }
+}
+
+.optionsButton {
+  @extend %action-button;
+  background-color: darken($border-color, 15%);
+  color: $text-color;
+
+  &:hover {
+    background-color: darken($border-color, 25%);
+  }
+}
+
+// --- NEW BUTTON STYLES FOR EDIT MODE ---
+.saveButton, .cancelButton {
+  height: auto;
+  width: auto;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  cursor: pointer; // Adicionado cursor pointer explicitamente
 }
 
 .saveButton {
   background-color: $success-color;
-  color: white;
-  border: none;
-  padding: $spacing-sm $spacing-lg;
-  border-radius: $border-radius;
-  cursor: pointer;
-  font-weight: $font-weight-bold;
-  transition: opacity 0.2s;
+  color: #fff;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: $text-color;
+  border: 1px solid $border-color;
 
   &:hover {
-    opacity: 0.9;
+    background-color: darken($border-color, 5%);
   }
+}
+
+.deleteButton {
+  background-color: $error-color;
+  color: #fff;
+  border: none;
+  border-radius: $border-radius;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+
+  &:hover {
+    background-color: darken($error-color, 10%);
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modalBox {
+  background: $background-color;
+  border-radius: $border-radius;
+  padding: $spacing-lg;
+  box-shadow: $box-shadow;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  max-width: 320px;
+  width: 100%;
+
+  p {
+    margin: 0;
+    color: $text-color;
+  }
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
 }
