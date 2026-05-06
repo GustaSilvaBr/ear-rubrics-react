@@ -11,6 +11,7 @@ interface StudentListProps {
   selectedStudent: IStudent | null;
   onAssignStudent: (student: IStudent) => void;
   onRemoveStudent: (studentEmail: string) => void;
+  onToggleLockGrade: (studentEmail: string) => void;
   onSelectStudent: (student: IStudent) => void;
   onSaveNewStudent: (student: Omit<IStudent, "studentDocId">) => Promise<void>;
   allAvailableStudents: IStudent[];
@@ -23,6 +24,7 @@ export function StudentList({
   selectedStudent,
   onAssignStudent,
   onRemoveStudent,
+  onToggleLockGrade,
   onSelectStudent,
   onSaveNewStudent,
   allAvailableStudents,
@@ -78,10 +80,12 @@ export function StudentList({
             const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
             const bonusPoints = studentGrade?.bonusSelectedIndices?.length ?? 0;
 
+            const isLocked = studentGrade?.gradeLocked ?? false;
+
             return (
               <div
                 key={student.email}
-                className={`${styles.studentItem} ${isSelected ? styles.selected : ''}`}
+                className={`${styles.studentItem} ${isSelected ? styles.selected : ''} ${isLocked ? styles.locked : ''}`}
                 onClick={() => onSelectStudent(student)}
               >
                 <span className={styles.studentName}>{student.name}</span>
@@ -100,6 +104,22 @@ export function StudentList({
                     className={styles.removeButton}
                   >
                     &times;
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isLocked) {
+                        if (window.confirm(`Are you sure you want to unlock ${student.name}'s grade?`)) {
+                          onToggleLockGrade(student.email);
+                        }
+                      } else {
+                        onToggleLockGrade(student.email);
+                      }
+                    }}
+                    className={`${styles.lockButton} ${isLocked ? styles.lockButtonLocked : ''}`}
+                    title={isLocked ? 'Unlock grade' : 'Lock grade'}
+                  >
+                    {isLocked ? '🔒' : '🔓'}
                   </button>
                 </div>
               </div>

@@ -105,6 +105,29 @@
   }
 }
 
+.lockButton {
+  background: transparent;
+  border: none;
+  font-size: $font-size-base;
+  cursor: pointer;
+  padding: 0 $spacing-xs;
+  flex-shrink: 0;
+  line-height: 1;
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.lockButtonLocked {
+    opacity: 1;
+  }
+}
+
+.locked {
+  opacity: 0.75;
+}
+
 .noStudentsMessage {
   font-size: $font-size-base;
   color: lighten($text-color, 40%);

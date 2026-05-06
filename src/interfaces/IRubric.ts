@@ -21,6 +21,7 @@ export interface IStudentRubricGrade{
     }[];
     currentGrade: number;
     bonusSelectedIndices?: number[];
+    gradeLocked?: boolean;
 }
 
 export interface IRubric{

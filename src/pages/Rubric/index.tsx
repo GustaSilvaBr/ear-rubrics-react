@@ -308,6 +308,8 @@ export function Rubric() {
 
   const handleBonusToggle = async (colIndex: number) => {
     if (!rubric || !selectedStudent) return;
+    const selectedEntry = rubric.studentRubricGrade.find(g => g.studentEmail === selectedStudent.email);
+    if (selectedEntry?.gradeLocked) return;
     const updatedGrades = rubric.studentRubricGrade.map(sg => {
       if (sg.studentEmail !== selectedStudent.email) return sg;
       const current = sg.bonusSelectedIndices ?? [];
@@ -408,13 +410,31 @@ export function Rubric() {
 
   const handleRemoveStudent = async (studentEmail: string) => {
     if (!rubric || !db || !userId) return;
-    
+
     if (selectedStudent?.email === studentEmail) {
       setSelectedStudent(null);
     }
 
     const updatedStudentRubricGrade = rubric.studentRubricGrade.filter(
       (grade) => grade.studentEmail !== studentEmail
+    );
+
+    const newRubricState = {
+      ...rubric,
+      studentRubricGrade: updatedStudentRubricGrade,
+    };
+    setRubric(newRubricState);
+
+    await handleSaveChanges(newRubricState);
+  };
+
+  const handleToggleLockGrade = async (studentEmail: string) => {
+    if (!rubric || !db || !userId) return;
+
+    const updatedStudentRubricGrade = rubric.studentRubricGrade.map((grade) =>
+      grade.studentEmail === studentEmail
+        ? { ...grade, gradeLocked: !grade.gradeLocked }
+        : grade
     );
 
     const newRubricState = {
@@ -433,6 +453,11 @@ export function Rubric() {
     }
     if (selectedStudent.disabled) return;
 
+    const selectedStudentGradeEntry = rubric.studentRubricGrade.find(
+      (g) => g.studentEmail === selectedStudent.email
+    );
+    if (selectedStudentGradeEntry?.gradeLocked) return;
+
     const selectedLineId = rubric.rubricLines[categoryIndex]?.lineId;
     if (!gradableLineIds.includes(selectedLineId)) {
         return;
@@ -440,10 +465,15 @@ export function Rubric() {
 
     const newGrades = rubric.studentRubricGrade.map((studentGrade) => {
       if (studentGrade.studentEmail === selectedStudent.email) {
-        const newRubricGradesLocation = [
-          ...studentGrade.rubricGradesLocation.filter(grade => grade.categoryIndex !== categoryIndex),
-          { categoryIndex, gradingIndex },
-        ];
+        const existing = studentGrade.rubricGradesLocation.find(
+          g => g.categoryIndex === categoryIndex && g.gradingIndex === gradingIndex
+        );
+        const newRubricGradesLocation = existing
+          ? studentGrade.rubricGradesLocation.filter(g => g.categoryIndex !== categoryIndex)
+          : [
+              ...studentGrade.rubricGradesLocation.filter(g => g.categoryIndex !== categoryIndex),
+              { categoryIndex, gradingIndex },
+            ];
 
         const newCurrentGrade = newRubricGradesLocation.reduce((total, grade) => {
             const line = rubric.rubricLines[grade.categoryIndex];
@@ -452,7 +482,7 @@ export function Rubric() {
             }
             return total;
         }, 0);
-        
+
         return {
           ...studentGrade,
           rubricGradesLocation: newRubricGradesLocation,
@@ -610,6 +640,7 @@ export function Rubric() {
           selectedStudent={selectedStudent}
           onAssignStudent={handleAssignStudent}
           onRemoveStudent={handleRemoveStudent}
+          onToggleLockGrade={handleToggleLockGrade}
           onSelectStudent={setSelectedStudent}
           onSaveNewStudent={handleSaveNewStudent}
           allAvailableStudents={allAvailableStudents}
