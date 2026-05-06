@@ -99,7 +99,9 @@ export function StudentList({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onRemoveStudent(student.email);
+                      if (window.confirm(`Remove ${student.name} from this rubric?`)) {
+                        onRemoveStudent(student.email);
+                      }
                     }}
                     className={styles.removeButton}
                   >
