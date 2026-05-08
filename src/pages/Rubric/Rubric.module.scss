@@ -2,21 +2,55 @@
 @import "../../styles/variables";
 
 .rubricPage {
-  display: grid;
-  grid-template-columns: minmax(auto, 210px) 1fr;
-  gap: $spacing-lg;
+  display: flex;
+  align-items: stretch;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 
-.rubricContent {
-  min-width: 0;
+.rubricPageDragging {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .studentListSidebar {
-  // Styles for the sidebar
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.dividerHandle {
+  flex-shrink: 0;
+  width: 8px;
+  cursor: col-resize;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 8%;
+    bottom: 8%;
+    width: 3px;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  &:hover::after {
+    background: $border-color;
+  }
+}
+
+.dividerHandleActive::after {
+  background: $primary-color !important;
+}
+
+.rubricContent {
+  flex: 1;
+  min-width: 0;
 }
 
 .header {

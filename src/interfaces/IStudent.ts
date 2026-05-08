@@ -5,4 +5,5 @@ export interface IStudent {
     email: string, // Garante que é string e será o identificador principal
     gradeLevel: string,
     disabled?: boolean,
+    photoUrl?: string,
 }

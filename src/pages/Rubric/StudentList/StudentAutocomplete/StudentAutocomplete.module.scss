@@ -39,13 +39,38 @@
 }
 
 .dropdownItem {
-  padding: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
   cursor: pointer;
   font-size: $font-size-base;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 
   &:hover {
     background-color: $secondary-color;
   }
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+.avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: $primary-color;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: $font-weight-bold;
+  overflow: hidden;
+  user-select: none;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .addStudentItem {
@@ -87,6 +112,55 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
+}
+
+// ── Photo upload ──────────────────────────────────────────────────────────────
+
+.photoField {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.photoPreview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: lighten($border-color, 5%);
+  border: 2px dashed $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: $primary-color;
+  }
+}
+
+.photoPreviewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photoPlaceholder {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.photoHint {
+  font-size: 0.8rem;
+  color: lighten($text-color, 30%);
+  cursor: pointer;
 }
 
 .field {

@@ -1,5 +1,5 @@
 // src/pages/Rubric/index.tsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, deleteDoc, collection, query, onSnapshot } from "firebase/firestore";
 import { useFirebase } from "../../context/FirebaseContext";
@@ -55,6 +55,56 @@ export function Rubric() {
   const [error, setError] = useState<string | null>(null);
   const [allAvailableStudents, setAllAvailableStudents] = useState<IStudent[]>([]); // Nova lista para todos os estudantes
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // ── Resizable sidebar ──────────────────────────────────────────────────────
+  const SIDEBAR_WIDTH_KEY = 'rubric_sidebar_width';
+  const MIN_W = 140;
+  const MAX_W = 520;
+
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+      if (saved) return Math.min(MAX_W, Math.max(MIN_W, parseInt(saved, 10)));
+    } catch { /* ignore */ }
+    return 210;
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef   = useRef(false);
+  const dragStartXRef   = useRef(0);
+  const dragStartWRef   = useRef(0);
+  const sidebarWidthRef = useRef(sidebarWidth);
+
+  useEffect(() => { sidebarWidthRef.current = sidebarWidth; }, [sidebarWidth]);
+
+  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartWRef.current = sidebarWidthRef.current;
+    setIsDragging(true);
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const next = Math.min(MAX_W, Math.max(MIN_W, dragStartWRef.current + e.clientX - dragStartXRef.current));
+      setSidebarWidth(next);
+    };
+    const onUp = () => {
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+      setIsDragging(false);
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidthRef.current)); } catch { /* ignore */ }
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+  // ────────────────────────────────────────────────────────────────────────────
 
   // Função auxiliar para adicionar sufixos ao nível de ensino
   const getGradeLevelWithSuffix = (gradeLevel: string): string => {
@@ -648,8 +698,8 @@ export function Rubric() {
 
 
   return (
-    <div className={styles.rubricPage}>
-      <div className={styles.studentListSidebar}>
+    <div className={`${styles.rubricPage} ${isDragging ? styles.rubricPageDragging : ''}`}>
+      <div className={styles.studentListSidebar} style={{ width: sidebarWidth }}>
         <StudentList
           rubricId={rubric.id ?? ''}
           teacherUid={userId ?? ''}
@@ -665,6 +715,12 @@ export function Rubric() {
           allAvailableStudents={allAvailableStudents}
         />
       </div>
+
+      <div
+        className={`${styles.dividerHandle} ${isDragging ? styles.dividerHandleActive : ''}`}
+        onMouseDown={handleDividerMouseDown}
+      />
+
       <div className={styles.rubricContent}>
         <header className={styles.header}>
           <div className={styles.headerContent}>

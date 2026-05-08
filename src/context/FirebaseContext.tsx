@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, type Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // Variável para armazenar a instância do Firebase App
 export let app: FirebaseApp; // Exporta a instância do app Firebase
@@ -10,6 +11,7 @@ export let app: FirebaseApp; // Exporta a instância do app Firebase
 interface FirebaseContextType {
   db: Firestore | null;
   auth: Auth | null;
+  storage: FirebaseStorage | null;
   userId: string | null;
   teacherEmail: string | null;
   teacherName: string | null;
@@ -20,6 +22,7 @@ interface FirebaseContextType {
 const FirebaseContext = createContext<FirebaseContextType>({
   db: null,
   auth: null,
+  storage: null,
   userId: null,
   teacherEmail: null,
   teacherName: null,
@@ -37,6 +40,7 @@ interface FirebaseProviderProps {
 export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   const [db, setDb] = useState<Firestore | null>(null);
   const [auth, setAuth] = useState<Auth | null>(null);
+  const [storage, setStorage] = useState<FirebaseStorage | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [teacherEmail, setTeacherEmail] = useState<string | null>(null);
   const [teacherName, setTeacherName] = useState<string | null>(null);
@@ -77,6 +81,7 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
 
       setDb(firestore);
       setAuth(firebaseAuth);
+      setStorage(getStorage(app));
 
       const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
@@ -106,7 +111,7 @@ export const FirebaseProvider = ({ children }: FirebaseProviderProps) => {
   }, []);
 
   return (
-    <FirebaseContext.Provider value={{ db, auth, userId, teacherEmail, teacherName, isAuthReady }}>
+    <FirebaseContext.Provider value={{ db, auth, storage, userId, teacherEmail, teacherName, isAuthReady }}>
       {error ? (
         <div style={{ padding: '20px', color: 'red', border: '1px solid red', borderRadius: '5px', margin: '20px' }}>
           <p>Erro: {error}</p>

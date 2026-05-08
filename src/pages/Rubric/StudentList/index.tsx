@@ -1,7 +1,10 @@
 // src/pages/Rubric/StudentList/index.tsx
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, updateDoc } from "firebase/firestore";
 import type { IStudent } from "../../../interfaces/IStudent";
 import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
+import { useFirebase } from "../../../context/FirebaseContext";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
@@ -20,6 +23,10 @@ interface StudentListProps {
   allAvailableStudents: IStudent[];
 }
 
+function initials(name: string) {
+  return name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+}
+
 export function StudentList({
   rubricId,
   teacherUid,
@@ -34,7 +41,11 @@ export function StudentList({
   onSaveNewStudent,
   allAvailableStudents,
 }: StudentListProps) {
+  const { storage, db } = useFirebase();
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [uploadingEmail, setUploadingEmail] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadTargetEmail = useRef<string | null>(null);
 
   const getGradeLevelWithSuffix = (gradeLevel: string): string => {
     const num = parseInt(gradeLevel);
@@ -66,9 +77,62 @@ export function StudentList({
     });
   };
 
+  const uploadPhoto = async (email: string, file: File) => {
+    if (!storage || !db) return;
+    setUploadingEmail(email);
+    try {
+      const storageRef = ref(storage, `studentPhotos/${email}`);
+      await uploadBytes(storageRef, file);
+      const photoUrl = await getDownloadURL(storageRef);
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      await updateDoc(doc(db, `artifacts/${appId}/students`, email), { photoUrl });
+    } catch (err) {
+      console.error("Failed to upload student photo:", err);
+    } finally {
+      setUploadingEmail(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarClick = (e: React.MouseEvent, email: string) => {
+    e.stopPropagation();
+    uploadTargetEmail.current = email;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const email = uploadTargetEmail.current;
+    if (file && email) uploadPhoto(email, file);
+  };
+
+  // Paste listener: applies to the last avatar clicked, or the currently selected student
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const email = uploadTargetEmail.current ?? selectedStudent?.email;
+      if (!email) return;
+      const item = Array.from(e.clipboardData?.items ?? []).find(i => i.type.startsWith('image/'));
+      if (!item) return;
+      const file = item.getAsFile();
+      if (file) uploadPhoto(email, file);
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStudent?.email, storage, db]);
+
   return (
     <aside className={styles.studentListContainer}>
       <h2 className={styles.title}>Assign Students</h2>
+
+      {/* Hidden file input shared across all student avatars */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className={styles.hiddenInput}
+        onChange={handleFileChange}
+      />
 
       <StudentAutocomplete
         allStudents={allAvailableStudents.filter(s => !s.disabled)}
@@ -85,6 +149,7 @@ export function StudentList({
             const bonusPoints = studentGrade?.bonusSelectedIndices?.length ?? 0;
             const isLocked = studentGrade?.gradeLocked ?? false;
             const isCopied = copiedEmail === student.email;
+            const isUploading = uploadingEmail === student.email;
 
             return (
               <div
@@ -92,7 +157,22 @@ export function StudentList({
                 className={`${styles.studentItem} ${isSelected ? styles.selected : ''} ${isLocked ? styles.locked : ''}`}
                 onClick={() => onSelectStudent(student)}
               >
-                <span className={styles.studentName}>{student.name}</span>
+                <div className={styles.studentFirstRow}>
+                  <button
+                    className={`${styles.avatarButton} ${isUploading ? styles.avatarUploading : ''}`}
+                    onClick={(e) => handleAvatarClick(e, student.email)}
+                    title="Click to upload photo"
+                  >
+                    {student.photoUrl && !isUploading
+                      ? <img src={student.photoUrl} alt={student.name} className={styles.avatarImg} />
+                      : <span className={styles.avatarInitials}>
+                          {isUploading ? '…' : initials(student.name)}
+                        </span>
+                    }
+                  </button>
+                  <span className={styles.studentName}>{student.name}</span>
+                </div>
+
                 <div className={styles.studentSecondRow}>
                   <span className={styles.studentGradeLevel}>{getGradeLevelWithSuffix(student.gradeLevel)}</span>
                   <span className={styles.studentGrade}>
