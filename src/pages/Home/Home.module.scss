@@ -30,7 +30,7 @@
   align-items: center;
   text-align: center;
   min-height: 120px;
-  text-decoration: none; // Remove underline for Link component
+  text-decoration: none;
   color: $text-color;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
@@ -47,6 +47,12 @@
   margin-bottom: $spacing-xs;
 }
 
+.rubricGradeLevels {
+  font-weight: $font-weight-normal;
+  font-size: $font-size-base;
+  color: lighten($text-color, 20%);
+}
+
 .studentCount {
   font-size: $font-size-base;
   color: lighten($text-color, 20%);
@@ -56,8 +62,8 @@
   background-color: #ffffff;
   color: $primary-color;
   border: 1px dashed $primary-color;
-  cursor: pointer; // Adicionado: cursor pointer
-  
+  cursor: pointer;
+
   &:hover {
     background-color: lighten($primary-color, 45%);
     border-color: darken($primary-color, 10%);
@@ -67,5 +73,192 @@
     font-size: $font-size-title * 1.5;
     font-weight: $font-weight-bold;
     line-height: 1;
+  }
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────────
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalBox {
+  background: $background-color;
+  border-radius: $border-radius * 2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: $spacing-lg;
+  width: 480px;
+  max-width: 95vw;
+  position: relative;
+}
+
+.modalTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+  margin: 0 0 $spacing-md;
+  text-align: center;
+}
+
+.modalClose {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-sm;
+  background: none;
+  border: none;
+  font-size: $font-size-large;
+  color: lighten($text-color, 30%);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: $border-radius;
+
+  &:hover {
+    color: $text-color;
+    background: lighten($border-color, 5%);
+  }
+}
+
+// ── Create options ─────────────────────────────────────────────────────────────
+
+.createOptions {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.optionCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  padding: $spacing-md $spacing-sm;
+  background: $background-color;
+  border: 1px solid $border-color;
+  border-radius: $border-radius * 2;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  text-align: center;
+
+  &:hover {
+    border-color: $primary-color;
+    background: lighten($primary-color, 47%);
+    box-shadow: 0 2px 8px rgba(0, 90, 156, 0.12);
+  }
+}
+
+.optionIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.optionLabel {
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $primary-color;
+}
+
+.optionDescription {
+  font-size: 0.78rem;
+  color: lighten($text-color, 25%);
+}
+
+// ── CSV upload step ────────────────────────────────────────────────────────────
+
+.csvUpload {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.csvInstructions {
+  font-size: $font-size-base;
+  color: $text-color;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fileLabel {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  cursor: pointer;
+}
+
+.fileInput {
+  display: none;
+}
+
+.fileButton {
+  padding: $spacing-xs $spacing-sm;
+  background: $primary-color;
+  color: #fff;
+  border-radius: $border-radius;
+  font-size: $font-size-base;
+  white-space: nowrap;
+  user-select: none;
+
+  &:hover {
+    background: darken($primary-color, 8%);
+  }
+}
+
+.fileName {
+  font-size: $font-size-base;
+  color: lighten($text-color, 20%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csvError {
+  font-size: $font-size-base;
+  color: $error-color;
+  margin: 0;
+}
+
+.csvActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-sm;
+  margin-top: $spacing-xs;
+}
+
+.backButton {
+  padding: $spacing-xs $spacing-md;
+  background: none;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  color: $text-color;
+  font-size: $font-size-base;
+  cursor: pointer;
+
+  &:hover {
+    background: lighten($border-color, 5%);
+  }
+}
+
+.importButton {
+  padding: $spacing-xs $spacing-md;
+  background: $primary-color;
+  border: none;
+  border-radius: $border-radius;
+  color: #fff;
+  font-size: $font-size-base;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background: darken($primary-color, 8%);
   }
 }

@@ -105,6 +105,27 @@
   }
 }
 
+.shareButton {
+  background: transparent;
+  border: none;
+  font-size: $font-size-base;
+  cursor: pointer;
+  padding: 0 $spacing-xs;
+  flex-shrink: 0;
+  line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &.shareButtonCopied {
+    opacity: 1;
+    color: $success-color;
+  }
+}
+
 .lockButton {
   background: transparent;
   border: none;

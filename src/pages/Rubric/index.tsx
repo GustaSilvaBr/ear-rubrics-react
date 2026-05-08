@@ -604,6 +604,23 @@ export function Rubric() {
     alert(`Link de compartilhamento copiado! \n${shareableUrl}`);
   };
 
+  const handleShareRubric = () => {
+    if (!rubric?.id || !userId) {
+      alert("Save the rubric before sharing.");
+      return;
+    }
+    const url = `${window.location.origin}/rubricFeedback?id=${rubric.id}&teacherUid=${userId}`;
+    navigator.clipboard.writeText(url).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    });
+    alert(`Rubric link copied!\n${url}`);
+  };
+
   const handleCancel = () => {
     if (originalRubric) {
       setRubric(originalRubric);
@@ -634,6 +651,8 @@ export function Rubric() {
     <div className={styles.rubricPage}>
       <div className={styles.studentListSidebar}>
         <StudentList
+          rubricId={rubric.id ?? ''}
+          teacherUid={userId ?? ''}
           assignedStudents={assignedStudents}
           studentRubricGrades={rubric.studentRubricGrade}
           maxGrade={maxGrade}
@@ -705,8 +724,9 @@ export function Rubric() {
                     </button>
                   }
                 >
-                  <button onClick={handleEdit}>Editar</button>
-                  <button onClick={handleDelete}>Excluir</button>
+                  <button onClick={handleEdit}>Edit</button>
+                  <button onClick={handleShareRubric}>Share Rubric</button>
+                  <button onClick={handleDelete}>Delete</button>
                 </DropdownMenu>
               </>
             )}

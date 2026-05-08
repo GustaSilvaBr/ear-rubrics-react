@@ -1,10 +1,13 @@
 // src/pages/Rubric/StudentList/index.tsx
+import { useState } from "react";
 import type { IStudent } from "../../../interfaces/IStudent";
 import type { IStudentRubricGrade } from "../../../interfaces/IRubric";
 import { StudentAutocomplete } from "./StudentAutocomplete";
 import styles from "./StudentList.module.scss";
 
 interface StudentListProps {
+  rubricId: string;
+  teacherUid: string;
   assignedStudents: IStudent[];
   studentRubricGrades: IStudentRubricGrade[];
   maxGrade: number;
@@ -18,6 +21,8 @@ interface StudentListProps {
 }
 
 export function StudentList({
+  rubricId,
+  teacherUid,
   assignedStudents,
   studentRubricGrades,
   maxGrade,
@@ -29,43 +34,42 @@ export function StudentList({
   onSaveNewStudent,
   allAvailableStudents,
 }: StudentListProps) {
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
-  // Função auxiliar para adicionar sufixos ao nível de ensino
   const getGradeLevelWithSuffix = (gradeLevel: string): string => {
     const num = parseInt(gradeLevel);
-    if (isNaN(num)) return gradeLevel; // Retorna o original se não for um número
-
+    if (isNaN(num)) return gradeLevel;
     const lastDigit = num % 10;
     const lastTwoDigits = num % 100;
-
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-      return `${gradeLevel}th`;
-    }
-
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 13) return `${gradeLevel}th`;
     switch (lastDigit) {
-      case 1:
-        return `${gradeLevel}st`;
-      case 2:
-        return `${gradeLevel}nd`;
-      case 3:
-        return `${gradeLevel}rd`;
-      default:
-        return `${gradeLevel}th`;
+      case 1: return `${gradeLevel}st`;
+      case 2: return `${gradeLevel}nd`;
+      case 3: return `${gradeLevel}rd`;
+      default: return `${gradeLevel}th`;
     }
   };
 
   const handleSelectStudent = (student: IStudent) => {
     if (!assignedStudents.some((s) => s.email === student.email)) {
       onAssignStudent(student);
-    } else {
-        console.warn("Estudante já atribuído:", student.email);
     }
+  };
+
+  const handleCopyLink = (e: React.MouseEvent, student: IStudent) => {
+    e.stopPropagation();
+    const encodedEmail = btoa(student.email);
+    const url = `${window.location.origin}/rubricFeedback?id=${rubricId}&student=${encodedEmail}&teacherUid=${teacherUid}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedEmail(student.email);
+      setTimeout(() => setCopiedEmail(null), 2000);
+    });
   };
 
   return (
     <aside className={styles.studentListContainer}>
       <h2 className={styles.title}>Assign Students</h2>
-      
+
       <StudentAutocomplete
         allStudents={allAvailableStudents.filter(s => !s.disabled)}
         onStudentSelect={handleSelectStudent}
@@ -79,8 +83,8 @@ export function StudentList({
             const studentGrade = studentRubricGrades.find(g => g.studentEmail === student.email);
             const currentGrade = studentGrade ? studentGrade.currentGrade : 0;
             const bonusPoints = studentGrade?.bonusSelectedIndices?.length ?? 0;
-
             const isLocked = studentGrade?.gradeLocked ?? false;
+            const isCopied = copiedEmail === student.email;
 
             return (
               <div
@@ -96,6 +100,13 @@ export function StudentList({
                       ? '-'
                       : `${currentGrade + bonusPoints} / ${maxGrade}`}
                   </span>
+                  <button
+                    onClick={(e) => handleCopyLink(e, student)}
+                    className={`${styles.shareButton} ${isCopied ? styles.shareButtonCopied : ''}`}
+                    title="Copy student link"
+                  >
+                    {isCopied ? '✓' : '🔗'}
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -125,10 +136,10 @@ export function StudentList({
                   </button>
                 </div>
               </div>
-            )
+            );
           })
         ) : (
-          <p className={styles.noStudentsMessage}>Nenhum estudante atribuído ainda.</p>
+          <p className={styles.noStudentsMessage}>No students assigned yet.</p>
         )}
       </div>
     </aside>
